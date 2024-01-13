@@ -1,7 +1,4 @@
-__all__ = [
-    'database_client',
-    'Base'
-]
+__all__ = ["database_client", "Base"]
 
 
 from sqlalchemy import create_engine, MetaData
@@ -10,13 +7,7 @@ from app.settings import settings
 from sqlalchemy.ext.declarative import declarative_base
 
 
-_base = declarative_base(
-    metadata=MetaData(schema=settings.POSTGRES_SCHEMA)
-)
-
-
-class Base(_base):
-    __abstract__ = True
+Base = declarative_base(metadata=MetaData(schema=settings.POSTGRES_SCHEMA))
 
 
 class Database:

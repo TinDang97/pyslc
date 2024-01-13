@@ -1,6 +1,6 @@
-__all__ = ['ModelBase', 'ModelMixin', 'TimestampMixin', 'UserMixin']
-__author__ = 'Tin Dang'
-__description__ = 'Base model for all models'
+__all__ = ["ModelBase", "ModelMixin", "TimestampMixin", "UserMixin"]
+__author__ = "Tin Dang"
+__description__ = "Base model for all models"
 
 
 from sqlalchemy import Column, DateTime, Integer, Uuid
@@ -27,10 +27,14 @@ class ModelMixin(TimestampMixin, UserMixin):
 
 class ModelBase(Base, ModelMixin):
     __abstract__ = True
-    __table_args__ = {'schema': settings.POSTGRES_SCHEMA}
+    __table_args__ = {"schema": settings.POSTGRES_SCHEMA}
 
     def __repr__(self):
-        return f'<{self.__class__.__name__}(id={self.id}, is_deleted={self.is_deleted})>'
+        return (
+            f"<{self.__class__.__name__}(id={self.id}, is_deleted={self.is_deleted})>"
+        )
 
     def __str__(self):
-        return f'<{self.__class__.__name__}(id={self.id}, is_deleted={self.is_deleted})>'
+        return (
+            f"<{self.__class__.__name__}(id={self.id}, is_deleted={self.is_deleted})>"
+        )

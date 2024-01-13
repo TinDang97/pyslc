@@ -4,7 +4,7 @@ from app.model.base import ModelBase
 
 
 class Document(ModelBase):
-    __tablename__ = 'document'
+    __tablename__ = "document"
 
     name = Column(String, nullable=False)
     file_name = Column(String, nullable=False)
