@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  api-app:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - PYSLC_DB_HOST=db
+      - PYSLC_DB_PORT=5432
+      - PYSLC_DB_NAME=slc
+      - PYSLC_DB_USER=slc
+      - PYSLC_DB_PASSWORD=slcpasswords
+    networks:
+      - pyslc
+
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=slc
+      - POSTGRES_USER=slc
+      - POSTGRES_PASSWORD=slcpasswords
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    networks:
+      - pyslc
+
+volumes:
+  postgres_data:
+
+networks:
+  pyslc:
+    driver: bridge
