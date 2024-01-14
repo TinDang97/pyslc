@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     # settings of the pyslc postgres database connection
     db = PostgresConfig()
 
+    # settings of the pyslc openai api
+    openai_api_key: str = ""
+    openai_model: str = "gpt-3.5-turbo-1106"
+
 
 # create an instance of the Settings class
 if os.environ.get("PYSLC_ENV") == "production":
