@@ -60,7 +60,7 @@ services:
       - .env # Store your OpenAI API key here as ZEP_OPENAI_API_KEY
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: zep.Dockerfile
     healthcheck:
       test: timeout 10s bash -c ':> /dev/tcp/127.0.0.1/8000' || exit 1
       interval: 5s
