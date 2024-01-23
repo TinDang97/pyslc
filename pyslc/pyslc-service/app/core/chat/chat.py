@@ -19,10 +19,11 @@ Retrieve and present detailed information from the provided text. Focus on answe
 
 class ChatHandler:
     def __init__(self, *, api_key: str, model: str):
+        self.model = model
+
         self.client = OpenAI(api_key=api_key)
         self.assistant = self.get_new_assistance()
         self.storage = ChatStorage[Thread]()
-        self.model = model
         self.timeout = 10
 
     def get_new_assistance(self) -> Assistant:
@@ -34,7 +35,7 @@ class ChatHandler:
         run = self.client.beta.threads.runs.create(
             thread_id=thread.id,
             assistant_id=self.assistant.id,
-            instructions="Please address the user as Jane Doe. The user has a premium account.",
+            instructions=instructions,
         )
 
         count = 0.0
@@ -57,7 +58,9 @@ class ChatHandler:
 
         response = []
         for message in messages:
-            response.append({"role": message.role, "text": message.text})
+            response.append(
+                {"role": message.role, "text": message.content[-1].text.value}
+            )
         return response
 
     def get_response(self, *, session_id: str | None = None, message: str):

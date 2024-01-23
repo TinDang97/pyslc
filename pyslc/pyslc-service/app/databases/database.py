@@ -7,7 +7,7 @@ from app.settings import settings
 from sqlalchemy.ext.declarative import declarative_base
 
 
-Base = declarative_base(metadata=MetaData(schema=settings.POSTGRES_SCHEMA))
+Base = declarative_base(metadata=MetaData(schema=settings.db.schema))
 
 
 class Database:

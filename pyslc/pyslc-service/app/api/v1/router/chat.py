@@ -21,4 +21,4 @@ def create_chat(chat: ChatRequest):
     response = ChatResponse(
         session_id=response["session_id"], response=response["response"]
     )
-    return ChatResponse(**chat.model_dump(exclude_none=True), response=response)
+    return response

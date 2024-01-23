@@ -10,6 +10,7 @@ class PostgresConfig(BaseSettings):
     name: str = "pyslc"
     user: str = "pyslc"
     password: str = "pyslc"
+    schema: str = "pyslc"
 
     @property
     def db_url(self) -> str:
@@ -19,7 +20,7 @@ class PostgresConfig(BaseSettings):
 # class model config
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_nested_delimiter="_",
+        env_nested_delimiter="__",
         env_prefix="pyslc_",
         env_file_encoding="utf-8",
         env_file=".env",
@@ -33,8 +34,19 @@ class Settings(BaseSettings):
     server_host: str = "0.0.0.0"
     server_port: int = 8000
 
+    # Settings for the FastAPI application CORS
+    cors_allow_origins: str = "*"
+    cors_allow_credentials: bool = True
+    cors_allow_methods: str = "*"
+    cors_allow_headers: str = "*"
+
+    # Settings for the FastAPI application logging
+    log_level: str = "info"
+    log_format: str = "%(asctime)s %(levelname)s %(message)s"
+    log_date_format: str = "%Y-%m-%d %H:%M:%S"
+
     # settings of the pyslc postgres database connection
-    db = PostgresConfig()
+    db: PostgresConfig = PostgresConfig()
 
     # settings of the pyslc openai api
     openai_api_key: str = ""
