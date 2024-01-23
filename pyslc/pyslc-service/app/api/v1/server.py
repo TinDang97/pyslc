@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from app.settings import settings
+from app.api.v1.router.chat import router as chat_router
 
 app = FastAPI(
     title=settings.app_name,
@@ -31,6 +32,7 @@ async def health_check():
 
 
 # include the router
+app.include_router(chat_router, prefix="/api/v1")
 
 
 if __name__ == "__main__":
