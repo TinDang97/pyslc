@@ -1,7 +1,9 @@
 from fastapi import FastAPI
+from llama_index import SimpleDirectoryReader
 
+from app.core.llm.zep import ZepEngine
 from app.settings import settings
-from app.api.v1.endpoint.chat import router as chat_router
+from app.api.v1.endpoint.chat import router as chat_router, storage
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
@@ -14,6 +16,10 @@ app = FastAPI(
 @app.on_event("startup")
 async def startup_event():
     print("Starting up...")
+    print("injecting demo")
+    # load the model
+    doc = SimpleDirectoryReader("./demo").load_data()
+    storage.get("demo", ZepEngine("pauldemo", documents=doc))
 
 
 @app.on_event("shutdown")
