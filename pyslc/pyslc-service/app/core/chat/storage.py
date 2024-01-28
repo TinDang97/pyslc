@@ -10,6 +10,9 @@ class ChatStorage(Generic[T]):
     def __init__(self):
         self._storage: Dict[str, T] = defaultdict()
 
+    def __contains__(self, item):
+        return item in self._storage
+
     def get(self, session_id: str) -> T | None:
         return self._storage.get(session_id)
 
