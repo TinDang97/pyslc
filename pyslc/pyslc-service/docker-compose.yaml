@@ -24,7 +24,7 @@ services:
     image: ghcr.io/getzep/zep-nlp-server:latest
     container_name: zep-nlp
     env_file:
-      - .env # You can set your embedding-related variables here
+      - dev.env # You can set your embedding-related variables here
     restart: on-failure
     networks:
       - zep-network
@@ -53,7 +53,7 @@ services:
     environment:
       - ZEP_STORE_POSTGRES_DSN=postgres://postgres:postgres@db:5432/postgres?sslmode=disable
       - ZEP_NLP_SERVER_URL=http://nlp:5557
-      - ZEP_LLM_MODEL=gpt-4
+      - ZEP_LLM_MODEL=gpt-3.5-turbo
       - ZEP_EMBEDDINGS_DEVICE=mps
       - ZEP_LOG_LEVEL=debug
       - ZEP_EXTRACTORS_DOCUMENTS_EMBEDDINGS_SERVICE=openai
@@ -62,8 +62,7 @@ services:
       - ZEP_EXTRACTORS_MESSAGES_EMBEDDINGS_DIMENSIONS=1536
       - ZEP_EXTRACTORS_MESSAGES_SUMMARIZER_EMBEDDINGS_SERVICE=openai
       - ZEP_EXTRACTORS_MESSAGES_SUMMARIZER_EMBEDDINGS_DIMENSIONS=1536
-    env_file:
-      - .env # Store your OpenAI API key here as ZEP_OPENAI_API_KEY
+      - ZEP_OPENAI_API_KEY=
     build:
       context: .
       dockerfile: zep.Dockerfile

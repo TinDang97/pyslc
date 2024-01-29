@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.exception_handlers import HTTPException
 
 from app.core.schema.chat import ChatCreate, ChatResponse, CreateQueryRequestPayload
@@ -22,10 +22,9 @@ def create_chat(chat: CreateQueryRequestPayload):
 
 
 @router.post("/{name}", response_model=ChatResponse)
-def chat(chat: ChatCreate, name: str):
-    if name not in storage:
-        raise HTTPException(status_code=404, detail="Chat not found")
-
+def chat(name: str, chat: ChatCreate = Depends()):
     engine: ZepEngine = storage.get(name)
+    if not engine:
+        raise HTTPException(status_code=404, detail="Chat not found")
     response = engine.query(chat.message)
     return response

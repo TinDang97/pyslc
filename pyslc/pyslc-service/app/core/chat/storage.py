@@ -14,7 +14,7 @@ class ChatStorage(Generic[T]):
         return item in self._storage
 
     def get(self, session_id: str) -> T | None:
-        return self._storage.get(session_id)
+        return self._storage.get(session_id, None)
 
     def add(self, session_id: str, instance: T) -> None:
         self._storage[session_id] = instance

@@ -19,7 +19,7 @@ async def startup_event():
     print("injecting demo")
     # load the model
     doc = SimpleDirectoryReader("./demo").load_data()
-    storage.get("demo", ZepEngine("pauldemo", documents=doc))
+    storage.add("demo", ZepEngine("pauldemo", documents=doc))
 
 
 @app.on_event("shutdown")

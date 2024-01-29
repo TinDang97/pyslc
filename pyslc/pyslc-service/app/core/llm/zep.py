@@ -2,18 +2,17 @@ from typing import List
 
 
 from app.settings import settings
-from llama_index import VectorStoreIndex, StorageContext, Document
+from llama_index import VectorStoreIndex, StorageContext, Document, ServiceContext
 from llama_index.readers import StringIterableReader
 from llama_index.vector_stores.zep import ZepVectorStore
+from llama_index.embeddings import OpenAIEmbedding
+
 import openai
-from dotenv import load_dotenv
 import logging
 import sys
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
-
-load_dotenv()
 
 openai.api_key = settings.openai_api_key
 
@@ -35,11 +34,21 @@ class ZepEngine:
         else:
             self.doc = StringIterableReader().load_data(data)
         self.storage_context = StorageContext.from_defaults(
-            vector_store=self.vector_store
+            vector_store=self.vector_store,
+        )
+        self.embed_model = OpenAIEmbedding(
+            api_key=settings.openai_api_key,
+            embed_batch_size=16,
+        )
+        self.service_context = ServiceContext.from_defaults(
+            embed_model=self.embed_model
         )
 
         self.index: VectorStoreIndex = VectorStoreIndex.from_documents(
-            self.doc, storage_context=self.storage_context, show_progress=True
+            self.doc,
+            storage_context=self.storage_context,
+            show_progress=True,
+            service_context=self.service_context,
         )
         self.query_engine = self.index.as_query_engine()
         self.rag_engine = self.index.as_retriever()
