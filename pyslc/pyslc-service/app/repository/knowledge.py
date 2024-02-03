@@ -9,24 +9,28 @@ class KnowledgeRepository(BaseRepository[Knowledge]):
     def __init__(self):
         super().__init__(Knowledge)
 
-    def get_knowledge(self, session) -> List[Knowledge]:
-        return self.get_all(session)
+    def get_knowledge(
+        self, *, session, limit: int = 10, offset: int = 0
+    ) -> List[Knowledge]:
+        return self.get_all(session=session, limit=limit, offset=offset)
 
-    def get_knowledge_by_id(self, session, id: str) -> Knowledge:
-        return self.get(session, id)
+    def get_knowledge_by_id(self, *, session, id: str) -> Knowledge:
+        return self.get(session=session, id=id)
 
-    def create_knowledge(self, session, **payload) -> Knowledge:
+    def create_knowledge(self, *, session, **payload) -> Knowledge:
         knowledge = map_dict_to_entity(Knowledge, **payload)
-        return self.create(session, knowledge)
+        return self.create(session=session, entity=knowledge)
 
-    def delete_knowledge(self, session, id: str):
-        return self.delete(session, id)
+    def delete_knowledge(self, *, session, id: str):
+        return self.delete(session=session, id=id)
 
     def get_knowledge_by_collection(
-        self, session, collection_id: str
+        self, *, session, collection_id: str, limit: int = 10, offset: int = 0
     ) -> List[Knowledge]:
         return (
             session.query(self.entity)
             .filter(Knowledge.collection_id == collection_id)
+            .limit(limit)
+            .offset(offset)
             .all()
         )

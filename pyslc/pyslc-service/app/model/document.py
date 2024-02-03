@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer
+from sqlalchemy import String, Integer, ForeignKey
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from typing import TYPE_CHECKING
 
@@ -18,7 +18,8 @@ class Document(ModelBase):
     file_size: Mapped[str] = mapped_column(Integer, nullable=False)
     file_type: Mapped[str] = mapped_column(String, nullable=False)
     file_hash: Mapped[str] = mapped_column(String, nullable=False)
-    collection_id = mapped_column(String, nullable=False)
+
+    collection_id = mapped_column(ForeignKey("collection.id"), nullable=False)
     collection: Mapped[Collection] = relationship(
         "Collection", back_populates="documents"
     )

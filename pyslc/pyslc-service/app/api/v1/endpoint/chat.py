@@ -1,30 +1,43 @@
 from fastapi import APIRouter, Depends
 from fastapi.exception_handlers import HTTPException
+from sqlalchemy.orm import Session
 
-from app.core.schema.chat import ChatCreate, ChatResponse, CreateQueryRequestPayload
-from app.core.llm.zep import ZepEngine
-from app.core.chat.storage import ChatStorage
-
+from app.schema.chat import ChatCreatePayload, ChatResponsePayload
+from app.services.chat import ChatService
+from app.services.collection import CollectionService
+from app.repository.collection import CollectionRepository
+from app.services.knowledge import KnowledgeService
+from app.repository.knowledge import KnowledgeRepository
+from app.databases.database import database_client
 
 router = APIRouter(prefix="/chat", tags=["chat"])
-storage = ChatStorage[ZepEngine]()
 
 
-@router.post("/", response_model=ChatResponse)
-def create_chat(chat: CreateQueryRequestPayload):
-    doc = chat.document
-    name = chat.name
+def get_service(session: Session = Depends(database_client.get_session)) -> ChatService:
+    return ChatService(
+        collection_service=CollectionService(
+            collection_repository=CollectionRepository(),
+            knowledge_service=KnowledgeService(
+                repository=KnowledgeRepository(), session=session
+            ),
+            session=session,
+        )
+    )
 
-    if name in storage:
-        return
 
-    storage.add(name, ZepEngine(name, doc))
+@router.post("/", response_model=ChatResponsePayload, status_code=201)
+def create_chat(
+    payload: ChatCreatePayload, service: ChatService = Depends(get_service)
+):
+    try:
+        return service.create_chat(payload)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/{name}", response_model=ChatResponse)
-def chat(name: str, chat: ChatCreate = Depends()):
-    engine: ZepEngine = storage.get(name)
-    if not engine:
-        raise HTTPException(status_code=404, detail="Chat not found")
-    response = engine.query(chat.message)
-    return response
+@router.post("/engine/{collection_id}", status_code=200)
+def create_engine(collection_id: str, service: ChatService = Depends(get_service)):
+    try:
+        return service.create_engine(collection_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

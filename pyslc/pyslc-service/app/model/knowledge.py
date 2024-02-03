@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String
+from sqlalchemy import Column, String, ForeignKey
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from typing import TYPE_CHECKING
 
@@ -12,7 +12,7 @@ class Knowledge(ModelBase, ModelMixin, TimestampMixin, UserMixin):
     __tablename__ = "knowledge"
 
     content: Mapped[str] = mapped_column(Column(String, nullable=False))
-    collection_id = Column(String, nullable=False)
+    collection_id = Column(ForeignKey("collection.id"), nullable=False)
     collection: Mapped[Collection] = relationship(
         "Collection", back_populates="knowledge"
     )

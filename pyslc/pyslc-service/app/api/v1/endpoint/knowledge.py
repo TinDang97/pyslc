@@ -1,23 +1,56 @@
-from fastapi import APIRouter
-from app.schema.knowledge import KnowledgeBasePayload, KnowledgeBaseResponse
+from typing import List
+
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from app.databases.database import database_client
+from app.repository.knowledge import KnowledgeRepository
+from app.schema.knowledge import (
+    KnowledgeBaseCreatePayload,
+    KnowledgeBaseResponse,
+    KnowledgeBaseListPayloadResponse,
+)
+from app.schema.query import QueryParams
+from app.services.knowledge import KnowledgeService
+
 
 router = APIRouter()
 
 
-@router.get("", response_model=KnowledgeBaseResponse)
-async def get_knowledge():
-    return {"knowledge": "This is the knowledge endpoint from the chat module."}
+def get_service(db: Session = Depends(database_client.get_session)) -> KnowledgeService:
+    return KnowledgeService(session=db, repository=KnowledgeRepository())
 
 
-@router.post("", status_code=201)
-async def post_knowledge(
-    payload: KnowledgeBasePayload,
+@router.post("/", response_model=KnowledgeBaseResponse, status_code=201)
+def create_knowledge_base(
+    payload: KnowledgeBaseCreatePayload,
+    service: KnowledgeService = Depends(get_service),
 ):
-    return {"knowledge": "This is the knowledge endpoint from the chat module."}
+    return service.create_knowledge_base(payload)
 
 
-@router.put("", status_code=200)
-async def put_knowledge(
-    payload: KnowledgeBasePayload,
+@router.get("/{id}", response_model=KnowledgeBaseResponse, status_code=200)
+def get_knowledge_base(id: str, service: KnowledgeService = Depends(get_service)):
+    return service.get_knowledge_base(id)
+
+
+@router.get("/", response_model=List[KnowledgeBaseResponse], status_code=200)
+def get_knowledge_bases(
+    query: QueryParams = Depends(QueryParams),
+    service: KnowledgeService = Depends(get_service),
 ):
-    return {"knowledge": "This is the knowledge endpoint from the chat module."}
+    return service.get_knowledge_bases(query.limit, query.offset)
+
+
+@router.get(
+    "/collection/{collection_id}",
+    response_model=KnowledgeBaseListPayloadResponse,
+    status_code=200,
+)
+def get_knowledge_bases_by_collection(
+    collection_id: str,
+    query: QueryParams = Depends(QueryParams),
+    service: KnowledgeService = Depends(get_service),
+):
+    return service.get_knowledge_bases_by_collection(
+        collection_id, query.limit, query.offset
+    )

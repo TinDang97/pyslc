@@ -4,17 +4,26 @@ from pydantic import BaseModel
 
 
 class _Base(BaseModel):
-    data: List[str]
-    collection_name: str
+    content: str
+    collection_id: str
 
 
 class KnowledgeBasePayload(_Base):
     pass
 
 
+class KnowledgeBaseCreatePayload(_Base):
+    pass
+
+
 class KnowledgeBaseResponse(_Base):
-    response: List[str]
-    collection_name: str
+    id: str
+
+
+class KnowledgeBaseListPayloadResponse(BaseModel):
+    collection_id: str
+    data: List[str]
+    size: int
 
 
 class KnowledgeBaseDeletePayload(BaseModel):
