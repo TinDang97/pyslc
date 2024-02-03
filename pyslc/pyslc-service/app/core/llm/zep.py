@@ -1,15 +1,13 @@
-from typing import List
-
-
-from app.settings import settings
-from llama_index import VectorStoreIndex, StorageContext, Document, ServiceContext
-from llama_index.readers import StringIterableReader
-from llama_index.vector_stores.zep import ZepVectorStore
-from llama_index.embeddings import OpenAIEmbedding
-
-import openai
 import logging
 import sys
+
+import openai
+from llama_index import VectorStoreIndex, StorageContext, ServiceContext
+from llama_index.embeddings import OpenAIEmbedding
+from llama_index.readers import StringIterableReader
+from llama_index.vector_stores.zep import ZepVectorStore
+
+from app.settings import settings
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
@@ -21,9 +19,15 @@ class ZepEngine:
     def __init__(
         self,
         collection_name: str,
-        data: List[str] = [],
-        documents: List[Document] = [],
+        data=None,
+        documents=None,
     ):
+        if documents is None:
+            documents = []
+
+        if data is None:
+            data = []
+
         self.vector_store = ZepVectorStore(
             api_url=settings.zep_url,
             collection_name=collection_name,
@@ -33,6 +37,7 @@ class ZepEngine:
             self.doc = documents
         else:
             self.doc = StringIterableReader().load_data(data)
+
         self.storage_context = StorageContext.from_defaults(
             vector_store=self.vector_store,
         )
