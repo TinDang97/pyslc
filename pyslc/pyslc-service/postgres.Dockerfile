@@ -1,6 +1,9 @@
 FROM postgres:15.4-bullseye
 # Set the pgvector version
 ARG PGVECTOR_VERSION=0.5.0
+ARG DATABASE=postgres
+ARG USER=postgres
+ARG PASSWORD=postgres
 
 # Install build dependencies
 RUN apt-get update && \
@@ -9,6 +12,11 @@ RUN apt-get update && \
         build-essential \
         curl \
         postgresql-server-dev-15
+
+RUN echo "CREATE USER IF NOT EXISTS ${USER};  \
+    CREATE DATABASE IF NOT EXISTS ${DATABASE};  \
+    GRANT ALL PRIVILEGES ON DATABASE ${DATABASE} TO ${USER};"  \
+    > /docker-entrypoint-initdb.d/init.sql
 
 # Download and extract the pgvector release, build the extension, and install it.
 RUN curl -f -L -o pgvector.tar.gz "https://github.com/pgvector/pgvector/archive/refs/tags/v${PGVECTOR_VERSION}.tar.gz" && \

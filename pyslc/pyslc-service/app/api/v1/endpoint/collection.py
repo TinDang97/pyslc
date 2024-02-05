@@ -1,7 +1,7 @@
 # Created by tindang at 04/02/2024
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.databases.database import database_client
@@ -52,6 +52,13 @@ def get_collection(id: str, service: CollectionService = Depends(get_service)):
     return service.get(id)
 
 
+@router.get("/name/{name}", response_model=CollectionResponse, status_code=200)
+def get_collection_by_name(
+    name: str, service: CollectionService = Depends(get_service)
+):
+    return service.get_by_name(name)
+
+
 @router.put("/{id}", response_model=CollectionResponse, status_code=200)
 def update_collection(
     id: str,
@@ -74,12 +81,15 @@ def delete_collection(id: str, service: CollectionService = Depends(get_service)
 def create_engine(
     collection_name: str, service: CollectionService = Depends(get_service)
 ):
+    collection = service.get_by_name(collection_name)
+    if not collection:
+        raise HTTPException(status_code=404, detail="Collection not found")
+
     knowledge_parts = service.knowledge_service.get_knowledge_bases_by_collection(
         collection_name
     )
-    collection = service.get(collection_name)
     return CollectionWithKnowledgeResponse(
         id=collection.id,
-        name=knowledge_parts.collection_id,
+        name=collection.name,
         knowledge_content=knowledge_parts.data,
     )

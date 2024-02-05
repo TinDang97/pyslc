@@ -2,7 +2,6 @@ from typing import List
 
 from app.repository.base import BaseRepository
 from app.model.knowledge import Knowledge
-from app.repository.util import map_dict_to_entity
 
 
 class KnowledgeRepository(BaseRepository[Knowledge]):
@@ -18,8 +17,7 @@ class KnowledgeRepository(BaseRepository[Knowledge]):
         return self.get(session=session, id=id)
 
     def create_knowledge(self, *, session, **payload) -> Knowledge:
-        knowledge = map_dict_to_entity(Knowledge, **payload)
-        return self.create(session=session, entity=knowledge)
+        return self.create(session=session, **payload)
 
     def delete_knowledge(self, *, session, id: str):
         return self.delete(session=session, id=id)

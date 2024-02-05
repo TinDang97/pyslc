@@ -30,7 +30,7 @@ def create_chat(
     payload: ChatCreatePayload, service: ChatService = Depends(get_service)
 ):
     try:
-        return service.create_chat(payload)
+        return service.chat(payload)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -38,6 +38,6 @@ def create_chat(
 @router.post("/engine/{collection_id}", status_code=200)
 def create_engine(collection_id: str, service: ChatService = Depends(get_service)):
     try:
-        return service.create_engine(collection_id)
+        service.create_engine(collection_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

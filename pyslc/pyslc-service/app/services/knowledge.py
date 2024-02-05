@@ -52,10 +52,9 @@ class KnowledgeService(ServiceBase):
         )
 
         # parse the knowledge parts to get the collection name and the data
-        collection_id = knowledge_parts[0].collection_id
         data = [knowledge_part.content for knowledge_part in knowledge_parts]
         return KnowledgeBaseListPayloadResponse(
-            collection_id=collection_id, data=data, size=len(data)
+            collection_id=knowledge_parts[0].collection_id, data=data, size=len(data)
         )
 
     def get(self, id):

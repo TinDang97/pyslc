@@ -29,11 +29,13 @@ chat_storage = ChatStorage[ZepEngine]()
 
 
 @contextmanager
-def get_chat_storage(collection_name: str):
-    yield chat_storage.get(collection_name)
+def get_chat_storage(engine_id: str):
+    yield chat_storage.get(engine_id)
 
 
 @contextmanager
-def add_chat_storage(collection_name: str, data: List[str]):
-    chat_storage.add(collection_name, ZepEngine(collection_name, data))
-    yield chat_storage.get(collection_name)
+def add_chat_storage(
+    *, engine_id, collection_name: str, data: List[str] | None = None, **kwargs
+):
+    chat_storage.add(engine_id, ZepEngine(collection_name, data))
+    yield chat_storage.get(engine_id)

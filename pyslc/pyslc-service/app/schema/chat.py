@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import BaseModel, field_validator, Field
 
 from app.core.util import split_string
@@ -5,9 +7,9 @@ from app.core.util import split_string
 
 class ChatBase(BaseModel):
     message: str = Field(..., title="Message")
-    collection_id: str = Field(..., title="Collection ID")
+    collection_id: UUID = Field(..., title="Collection ID")
 
-    @field_validator("message")
+    @field_validator("message")  # noqa
     @classmethod
     def message_must_not_be_empty(cls, v: str):
         if not v:
@@ -25,5 +27,4 @@ class ChatCreatePayload(ChatBase):
 
 class ChatResponsePayload(BaseModel):
     message: str
-    collection_id: str
-    collection_name: str
+    collection_id: UUID

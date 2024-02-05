@@ -26,7 +26,7 @@ class CollectionRepository(BaseRepository):
     def get_collection_by_id(self, session, id: str) -> Collection:
         collection = (
             session.query(Collection)
-            .options(joinedload(Collection.knowledge))
+            .options(joinedload(Collection.knowledge_parts))
             .filter(Collection.id == id)
             .first()
         )

@@ -1,11 +1,12 @@
 from typing import List
+from uuid import UUID
 
 from pydantic import BaseModel
 
 
 class _Base(BaseModel):
     content: str
-    collection_id: str
+    collection_id: UUID
 
 
 class KnowledgeBasePayload(_Base):
@@ -17,11 +18,11 @@ class KnowledgeBaseCreatePayload(_Base):
 
 
 class KnowledgeBaseResponse(_Base):
-    id: str
+    id: UUID
 
 
 class KnowledgeBaseListPayloadResponse(BaseModel):
-    collection_id: str
+    collection_id: UUID
     data: List[str]
     size: int
 

@@ -2,13 +2,13 @@ from sqlalchemy import String, Integer, ForeignKey
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from typing import TYPE_CHECKING
 
-from app.model.base import ModelBase
+from app.model.base import ModelBase, TimestampMixin, UserMixin
 
 if TYPE_CHECKING:
     from app.model.collection import Collection
 
 
-class Document(ModelBase):
+class Document(ModelBase, TimestampMixin, UserMixin):
     __tablename__ = "document"
 
     name: Mapped[str] = mapped_column(String, nullable=False)
@@ -20,8 +20,8 @@ class Document(ModelBase):
     file_hash: Mapped[str] = mapped_column(String, nullable=False)
 
     collection_id = mapped_column(ForeignKey("collection.id"), nullable=False)
-    collection: Mapped[Collection] = relationship(
-        "Collection", back_populates="documents"
+    collection: Mapped["Collection"] = relationship(
+        back_populates="documents", uselist=False
     )
 
     def __repr__(self):

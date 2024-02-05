@@ -1,4 +1,5 @@
 from typing import Optional, List
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -19,11 +20,11 @@ class UpdateCollectionPayload(CollectionBase):
 
 
 class CollectionResponse(CollectionBase):
-    id: str
+    id: UUID
 
 
 class CollectionWithKnowledgeResponse(CollectionBase):
-    id: str
+    id: UUID
     knowledge_content: List[str]
 
 

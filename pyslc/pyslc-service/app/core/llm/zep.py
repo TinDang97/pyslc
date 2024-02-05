@@ -3,6 +3,7 @@ import sys
 
 import openai
 from llama_index import VectorStoreIndex, StorageContext, ServiceContext
+from llama_index.core.llms.types import ChatMessage, MessageRole
 from llama_index.embeddings import OpenAIEmbedding
 from llama_index.readers import StringIterableReader
 from llama_index.vector_stores.zep import ZepVectorStore
@@ -56,6 +57,7 @@ class ZepEngine:
             service_context=self.service_context,
         )
         self.query_engine = self.index.as_query_engine()
+        self.chat_engine = self.index.as_chat_engine()
         self.rag_engine = self.index.as_retriever()
 
     def query(self, query: str):
@@ -63,3 +65,16 @@ class ZepEngine:
 
     def retrieve(self, query: str):
         return self.rag_engine.retrieve(query)
+
+    def chat(self, message: str, chat_history=None):
+        if chat_history is None:
+            chat_history = []
+
+        chat_histories = [
+            ChatMessage(
+                content=chat,
+                role=MessageRole.USER if i % 2 == 0 else MessageRole.ASSISTANT,
+            )
+            for i, chat in enumerate(chat_history)
+        ]
+        return self.chat_engine.chat(message, chat_histories)

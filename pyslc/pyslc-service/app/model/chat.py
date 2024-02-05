@@ -5,7 +5,7 @@ from sqlalchemy import String, ForeignKey
 from app.model.base import ModelBase
 from app.model.base import ModelMixin, TimestampMixin, UserMixin
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from app.model.collection import Collection
@@ -16,17 +16,22 @@ class Message(ModelBase, ModelMixin, TimestampMixin, UserMixin):
 
     content: Mapped[str] = mapped_column(String, nullable=False)
 
-    previous_message_id: Mapped[str] = mapped_column(String, nullable=True)
-    previous_message: Mapped["Message"] = relationship(back_populates="next_chat")
+    previous_message_id: Mapped[str] = mapped_column(
+        ForeignKey("message.id"), nullable=True
+    )
+    previous_message: Mapped["Message"] = relationship(
+        uselist=False,
+        foreign_keys=[previous_message_id],
+        remote_side=[previous_message_id],
+    )
 
     next_message_id: Mapped[str] = mapped_column(
         ForeignKey("message.id"), nullable=True
     )
-    next_message: Mapped["Message"] = relationship(back_populates="previous_chat")
-
-    collection_id = mapped_column(ForeignKey("collection.id"), nullable=False)
-    collection: Mapped["Collection"] = relationship(
-        "Collection", back_populates="chats"
+    next_message: Mapped["Message"] = relationship(
+        uselist=False,
+        foreign_keys=[next_message_id],
+        remote_side=[next_message_id],
     )
 
     chat_id = mapped_column(ForeignKey("chat.id"), nullable=False)
@@ -45,7 +50,12 @@ class Chat(ModelBase, ModelMixin, TimestampMixin, UserMixin):
 
     title: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=True)
-    messages = relationship("Message", back_populates="chat")
+    messages: Mapped[List[Message]] = relationship(back_populates="chat")
+
+    collection_id = mapped_column(ForeignKey("collection.id"), nullable=False)
+    collection: Mapped["Collection"] = relationship(
+        "Collection", back_populates="chats"
+    )
 
     def __repr__(self):
         return f"<Chat(name={self.name}, description={self.description})>"

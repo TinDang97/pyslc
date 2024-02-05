@@ -43,8 +43,13 @@ class CollectionService(ServiceBase):
         ]
 
     def create(self, payload: CollectionCreatePayload):
+        if self.collection_repository.get_collection_by_name(
+            self.session, payload.name
+        ):
+            raise ValueError("Collection already exists")
+
         collection = self.collection_repository.create_collection(
-            self.session, **payload.model_dump()
+            self.session, **payload.model_dump(exclude={"knowledge_content"})
         )
         if payload.knowledge_content:
             for content in payload.knowledge_content:
@@ -75,6 +80,17 @@ class CollectionService(ServiceBase):
             id=collection.id, name=collection.name, description=collection.description
         )
 
+    def get_by_name(self, name: str) -> CollectionResponse:
+        collection = self.collection_repository.get_collection_by_name(
+            self.session, name
+        )
+        if not collection:
+            raise ValueError("Collection not found")
+
+        return CollectionResponse(
+            id=collection.id, name=collection.name, description=collection.description
+        )
+
     def query(self, collection_id: str, query: str):
         collection = self.collection_repository.get_collection_by_name(
             self.session, collection_id
@@ -84,6 +100,19 @@ class CollectionService(ServiceBase):
 
         with get_chat_storage(collection_id) as zep_engine:
             return zep_engine.query(query)
+
+    def chat(self, collection_id, message: str):
+        collection = self.collection_repository.get_collection_by_id(
+            self.session, collection_id
+        )
+        if not collection:
+            raise ValueError("Collection not found")
+
+        with get_chat_storage(collection.id) as zep_engine:
+            if zep_engine is None:
+                raise ValueError("Engine not found")
+
+            return zep_engine.chat(message)
 
     def create_engine(self, collection_id: str):
         with get_chat_storage(collection_id) as zep_engine:
@@ -102,5 +131,9 @@ class CollectionService(ServiceBase):
         if not knowledge_parts.data:
             raise ValueError("No knowledge base found for this collection")
 
-        with add_chat_storage(collection.id, knowledge_parts.data) as zep_engine:
+        with add_chat_storage(
+            engine_id=collection.id,
+            collection_name=collection.name,
+            data=knowledge_parts.data,
+        ) as zep_engine:
             return zep_engine

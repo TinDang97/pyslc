@@ -1,4 +1,5 @@
 # Created by tindang at 04/02/2024
+from llama_index.chat_engine.types import AgentChatResponse
 
 from app.schema.chat import ChatCreatePayload, ChatResponsePayload
 from app.services.base import ServiceBase
@@ -37,26 +38,15 @@ class ChatService(ServiceBase):
         """
         return self.collection_service.create_engine(collection_id)
 
-    def create_chat(self, payload: ChatCreatePayload) -> ChatResponsePayload:
-        collection = self.collection_service.get(payload.collection_id)
-
-        if not collection:
-            raise ValueError("Collection not found")
-
+    def chat(self, payload: ChatCreatePayload) -> ChatResponsePayload:
         try:
-            self.create_engine(payload.collection_id)
-        except Exception as e:
-            raise ValueError("Create engine failed. Reason: {}".format(str(e)))
-
-        try:
-            message = self.collection_service.query(
+            message: AgentChatResponse = self.collection_service.chat(
                 payload.collection_id, payload.message
             )
         except ValueError as e:
             raise ValueError("Query failed. Reason: {}".format(str(e)))
 
         return ChatResponsePayload(
-            message=message,
-            collection_id=collection.id,
-            collection_name=collection.name,
+            message=message.response,
+            collection_id=payload.collection_id,
         )
