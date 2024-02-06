@@ -1,6 +1,11 @@
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, Type
 
-T = TypeVar("T")
+from sqlalchemy import update
+from sqlalchemy.orm import Session
+from app.databases.database import Base
+
+
+T = TypeVar("T", bound=Type[Base])
 
 
 class BaseRepository(Generic[T]):
@@ -8,55 +13,77 @@ class BaseRepository(Generic[T]):
     Base repository class.
     """
 
-    def __init__(self, session):
+    def __init__(self, entity: T):
         """
         Constructor.
 
         :param session: SQLAlchemy session
         """
-        self.session = session
+        self.entity = entity
 
-    def get(self, id):
+    def get(self, *, session: Session, id):
         """
         Get a single entity by its ID.
 
-        :param id: entity ID
-        :return: entity
+        :param session:
+        :type session:
         """
-        return self.session.query(self.entity).get(id)
+        return session.query(self.entity).get(id)
 
-    def get_all(self):
+    def get_all(self, *, session: Session, limit: int = 10, offset: int = 0):
         """
         Get all entities.
 
         :return: list of entities
         """
-        return self.session.query(self.entity).all()
+        return session.query(self.entity).limit(limit).offset(offset).all()
 
-    def add(self, entity):
+    def create(self, *, session: Session, **payload) -> T:
         """
-        Add an entity.
+        Create a new entity.
 
-        :param entity: entity
+        :param session:
+        :type session:
+        :param entity: entity to create
         """
-        self.session.add(entity)
+        entity = self.entity(**payload)
+        session.add(entity)
+        session.commit()
+        session.refresh(entity)
+        return entity
 
-    def delete(self, entity):
+    def update(self, *, session: Session, **payload) -> T:
         """
-        Delete an entity.
+        Update an entity.
 
-        :param entity: entity
+        :param session:
+        :type session:
+        :param entity: entity to update
         """
-        self.session.delete(entity)
+        entity = self.entity(**payload)
+        session.commit()
+        return entity
 
-    def commit(self):
+    def update_by_id(self, *, session: Session, id: str, **payload) -> T:
         """
-        Commit the current transaction.
-        """
-        self.session.commit()
+        Update an entity by its ID.
 
-    def rollback(self):
+        :param session:
+        :type session:
+        :param id: entity ID
+        :param payload: update payload
         """
-        Rollback the current transaction.
+        update_exec = update(self.entity).filter(self.entity.id == id).values(**payload)
+        session.execute(update_exec)
+        return self.get(session=session, id=id)
+
+    def delete(self, *, session: Session, id: str):
         """
-        self.session.rollback()
+        Delete an entity by its ID.
+
+        :param session:
+        :type session:
+        :param id: entity ID
+        """
+        update(self.entity).filter(self.entity.id == id).values(deleted_at=True)
+        session.commit()

@@ -1,5 +1,6 @@
 __all__ = ["database_client", "Base"]
 
+from contextlib import contextmanager
 
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import sessionmaker
@@ -22,6 +23,7 @@ class Database:
     def create_database(self) -> None:
         Base.metadata.create_all(self._engine)
 
+    @contextmanager
     def get_session(self):
         session = self._session_factory()
         try:
@@ -44,7 +46,9 @@ class DatabaseContainer:
     def get_session(cls):
         if cls.instance is None:
             cls.init()
-        return cls.instance.get_session()
+
+        with cls.instance.get_session() as session:
+            yield session
 
 
 database_client = DatabaseContainer

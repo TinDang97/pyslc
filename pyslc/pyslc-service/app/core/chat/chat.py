@@ -64,8 +64,11 @@ class ChatHandler:
         return response
 
     def get_response(self, *, session_id: str | None = None, message: str):
-        if not session_id and session_id not in self.storage:
+        if session_id is None and session_id not in self.storage:
             return self.create_chat(message)
+
+        if session_id is None:
+            raise ValueError("Session ID is required")
 
         thread = self.storage.get(session_id)
         next(self._run(thread))

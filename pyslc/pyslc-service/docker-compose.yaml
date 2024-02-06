@@ -6,11 +6,21 @@ services:
     restart: on-failure
     shm_size: "128mb"  # Increase this if vacuuming fails with a "no space left on device" error
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=pyslc
+      - POSTGRES_PASSWORD=pyslc
     build:
       context: .
       dockerfile: postgres.Dockerfile
+      args:
+        - POSTGRES_EXTENSIONS=pg_trgm
+        - POSTGRES_LOCALE=en_US.UTF-8
+        - POSTGRES_ENCODING=UTF-8
+        - POSTGRES_COLLATE=en_US.UTF-8
+        - DATABASE=pyslc
+        - USER=pyslc
+        - PASSWORD=pyslc
+    ports:
+      - "5432:5432"
     networks:
       - zep-network
     volumes:

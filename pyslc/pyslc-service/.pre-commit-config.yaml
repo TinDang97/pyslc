@@ -13,7 +13,7 @@ repos:
     rev: v1.7.1
     hooks:
     -   id: mypy
-        additional_dependencies: [pydantic]
+        additional_dependencies: [pydantic, alembic]
         exclude: tests
 -  repo: https://github.com/astral-sh/ruff-pre-commit
    rev: v0.1.7
