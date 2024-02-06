@@ -98,7 +98,7 @@ class CollectionService(ServiceBase):
         if not collection:
             raise ValueError("Collection not found")
 
-        with get_chat_storage(collection_id) as zep_engine:
+        with get_chat_storage(collection.id) as zep_engine:
             return zep_engine.query(query)
 
     def chat(self, collection_id, message: str):
@@ -115,18 +115,19 @@ class CollectionService(ServiceBase):
             return zep_engine.chat(message)
 
     def create_engine(self, collection_id: str):
-        with get_chat_storage(collection_id) as zep_engine:
-            if zep_engine is not None:
-                return zep_engine
-
         collection: Collection = self.collection_repository.get_collection_by_id(
             self.session, collection_id
         )
+
         if not collection:
             raise ValueError("Collection not found")
 
+        with get_chat_storage(collection.id) as zep_engine:
+            if zep_engine is not None:
+                return zep_engine
+
         knowledge_parts: KnowledgeBaseListPayloadResponse = (
-            self.knowledge_service.get_knowledge_bases_by_collection(collection.id)
+            self.knowledge_service.get_knowledge_bases_by_collection(collection_id)
         )
         if not knowledge_parts.data:
             raise ValueError("No knowledge base found for this collection")

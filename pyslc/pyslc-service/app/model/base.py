@@ -4,27 +4,32 @@ __description__ = "Base model for all models"
 
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Integer, UUID
+from sqlalchemy import DateTime, Integer, UUID, Boolean
+from sqlalchemy.orm import Mapped, mapped_column
 from app.databases.database import Base
 from app.settings import settings
-from uuid import uuid4
+from uuid import uuid4, UUID as UUIDType
 
 
 class TimestampMixin:
-    created_at = Column(DateTime, nullable=False, default=datetime.now)
-    updated_at = Column(DateTime, nullable=True)
-    deleted_at = Column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.now
+    )
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
 
 class UserMixin:
-    created_by = Column(Integer, nullable=True)
-    updated_by = Column(Integer, nullable=True)
-    deleted_by = Column(Integer, nullable=True)
+    created_by: Mapped[datetime] = mapped_column(Integer, nullable=True)
+    updated_by: Mapped[datetime] = mapped_column(Integer, nullable=True)
+    deleted_by: Mapped[datetime] = mapped_column(Integer, nullable=True)
 
 
 class ModelMixin(TimestampMixin, UserMixin):
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4, nullable=False)
-    is_deleted = Column(Integer, nullable=False, default=0)
+    id: Mapped[UUIDType] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid4, nullable=False
+    )
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=0)
 
 
 class ModelBase(Base, ModelMixin):

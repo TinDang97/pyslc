@@ -2,10 +2,10 @@ from typing import TypeVar, Generic, Type
 
 from sqlalchemy import update
 from sqlalchemy.orm import Session
-from app.model.base import ModelBase
+from app.databases.database import Base
 
 
-T = TypeVar("T", bound=Type[ModelBase])
+T = TypeVar("T", bound=Type[Base])
 
 
 class BaseRepository(Generic[T]):
@@ -73,7 +73,7 @@ class BaseRepository(Generic[T]):
         :param id: entity ID
         :param payload: update payload
         """
-        update_exec = update(self.entity).where(self.entity.id == id).values(**payload)
+        update_exec = update(self.entity).filter(self.entity.id == id).values(**payload)
         session.execute(update_exec)
         return self.get(session=session, id=id)
 
@@ -85,5 +85,5 @@ class BaseRepository(Generic[T]):
         :type session:
         :param id: entity ID
         """
-        update(self.entity).where(self.entity.id == id).values(deleted_at=True)
+        update(self.entity).filter(self.entity.id == id).values(deleted_at=True)
         session.commit()

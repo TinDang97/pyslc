@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import Column, String, ForeignKey
+from sqlalchemy import String, ForeignKey
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from typing import TYPE_CHECKING
 
@@ -14,7 +14,9 @@ class Knowledge(ModelBase, TimestampMixin, UserMixin):
     __tablename__ = "knowledge"
 
     content: Mapped[str] = mapped_column(String, nullable=False)
-    collection_id: Mapped[UUID] = Column(ForeignKey("collection.id"), nullable=False)
+    collection_id: Mapped[UUID] = mapped_column(
+        ForeignKey("collection.id"), nullable=False
+    )
     collection: Mapped["Collection"] = relationship(
         "Collection", back_populates="knowledge_parts"
     )
