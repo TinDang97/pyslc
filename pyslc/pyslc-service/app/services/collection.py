@@ -2,8 +2,6 @@ from typing import List
 
 from sqlalchemy.orm import Session
 
-from app.core.chat.storage import get_chat_storage, add_chat_storage
-from app.model.collection import Collection
 from app.repository.collection import CollectionRepository
 from app.schema.collection import (
     CollectionCreatePayload,
@@ -11,7 +9,6 @@ from app.schema.collection import (
     CollectionResponse,
 )
 from app.schema.knowledge import (
-    KnowledgeBaseListPayloadResponse,
     KnowledgeBaseCreatePayload,
 )
 from app.services.base import ServiceBase
@@ -90,51 +87,3 @@ class CollectionService(ServiceBase):
         return CollectionResponse(
             id=collection.id, name=collection.name, description=collection.description
         )
-
-    def query(self, collection_id: str, query: str):
-        collection = self.collection_repository.get_collection_by_name(
-            self.session, collection_id
-        )
-        if not collection:
-            raise ValueError("Collection not found")
-
-        with get_chat_storage(collection.id) as zep_engine:
-            return zep_engine.query(query)
-
-    def chat(self, collection_id, message: str):
-        collection = self.collection_repository.get_collection_by_id(
-            self.session, collection_id
-        )
-        if not collection:
-            raise ValueError("Collection not found")
-
-        with get_chat_storage(collection.id) as zep_engine:
-            if zep_engine is None:
-                raise ValueError("Engine not found")
-
-            return zep_engine.chat(message)
-
-    def create_engine(self, collection_id: str):
-        collection: Collection = self.collection_repository.get_collection_by_id(
-            self.session, collection_id
-        )
-
-        if not collection:
-            raise ValueError("Collection not found")
-
-        with get_chat_storage(collection.id) as zep_engine:
-            if zep_engine is not None:
-                return zep_engine
-
-        knowledge_parts: KnowledgeBaseListPayloadResponse = (
-            self.knowledge_service.get_knowledge_bases_by_collection(collection_id)
-        )
-        if not knowledge_parts.data:
-            raise ValueError("No knowledge base found for this collection")
-
-        with add_chat_storage(
-            engine_id=collection.id,
-            collection_name=collection.name,
-            data=knowledge_parts.data,
-        ) as zep_engine:
-            return zep_engine

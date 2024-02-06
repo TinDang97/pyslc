@@ -1,10 +1,6 @@
 from __future__ import annotations
 
-from contextlib import contextmanager
-from typing import TypeVar, Generic, List
-from uuid import UUID
-
-from app.core.llm.zep import ZepEngine
+from typing import TypeVar, Generic
 
 T = TypeVar("T")
 K = TypeVar("K")
@@ -25,19 +21,3 @@ class ChatStorage(Generic[K, T]):
 
     def clear(self, session_id: K) -> None:
         self._storage.pop(session_id)
-
-
-chat_storage = ChatStorage[UUID, ZepEngine]()
-
-
-@contextmanager
-def get_chat_storage(engine_id: UUID):
-    yield chat_storage.get(engine_id)
-
-
-@contextmanager
-def add_chat_storage(
-    *, engine_id: UUID, collection_name: str, data: List[str] | None = None, **kwargs
-):
-    chat_storage.add(engine_id, ZepEngine(collection_name, data))
-    yield chat_storage.get(engine_id)
