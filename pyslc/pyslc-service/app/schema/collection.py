@@ -30,3 +30,8 @@ class CollectionWithKnowledgeResponse(CollectionBase):
 
 class CollectionCreatePayload(CollectionBase):
     knowledge_content: Optional[List[str]] = None
+
+
+class CollectionCreateResponse(CollectionBase):
+    id: UUID
+    doc_added_count: int

@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from typing import List
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
@@ -18,12 +21,18 @@ from app.services.knowledge import KnowledgeService
 class CollectionService(ServiceBase):
     def __init__(
         self,
-        collection_repository: CollectionRepository,
-        knowledge_service: KnowledgeService,
+        *,
+        collection_repository: CollectionRepository | None = None,
+        knowledge_service: KnowledgeService | None = None,
         session: Session,
     ):
-        self.collection_repository: CollectionRepository = collection_repository
-        self.knowledge_service = knowledge_service
+        self.collection_repository: CollectionRepository = (
+            collection_repository or CollectionRepository()
+        )
+        self.knowledge_service = knowledge_service or KnowledgeService(
+            session=session,
+            collection_repository=self.collection_repository,
+        )
         self.session: Session = session
 
     def list(self, limit: int = 10, offset: int = 0) -> List[CollectionResponse]:
@@ -39,7 +48,7 @@ class CollectionService(ServiceBase):
             for collection in collections
         ]
 
-    def create(self, payload: CollectionCreatePayload):
+    def create(self, payload: CollectionCreatePayload) -> CollectionResponse:
         if self.collection_repository.get_collection_by_name(
             self.session, payload.name
         ):
@@ -56,8 +65,15 @@ class CollectionService(ServiceBase):
                         content=content,
                     )
                 )
+        return CollectionResponse(
+            id=collection.id,
+            name=collection.name,
+            description=collection.description,
+        )
 
-    def update(self, id, payload: UpdateCollectionPayload) -> CollectionResponse:
+    def update(
+        self, id: str | UUID, payload: UpdateCollectionPayload
+    ) -> CollectionResponse:
         collection = self.collection_repository.update_collection(
             self.session, id, **payload.model_dump()
         )
@@ -65,10 +81,10 @@ class CollectionService(ServiceBase):
             id=collection.id, name=collection.name, description=collection.description
         )
 
-    def delete(self, id: str):
+    def delete(self, id: str | UUID):
         return self.collection_repository.delete_collection(self.session, id)
 
-    def get(self, id: str) -> CollectionResponse:
+    def get(self, id: str | UUID) -> CollectionResponse:
         collection = self.collection_repository.get_collection_by_id(self.session, id)
         if not collection:
             raise ValueError("Collection not found")

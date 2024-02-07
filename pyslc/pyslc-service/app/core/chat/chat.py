@@ -23,7 +23,9 @@ class ChatAgent(Generic[T]):
         stream_msg: StreamingAgentChatResponse = self.engine.stream_chat(
             message, chat_history
         )
-        for msg, _, _ in stream_msg.response_gen:
+        for msg in stream_msg.response_gen:
+            if msg is None:
+                break
             yield msg
 
 

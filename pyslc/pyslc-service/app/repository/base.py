@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from typing import TypeVar, Generic, Type
+from uuid import UUID
 
 from sqlalchemy import update
 from sqlalchemy.orm import Session
@@ -64,7 +67,7 @@ class BaseRepository(Generic[T]):
         session.commit()
         return entity
 
-    def update_by_id(self, *, session: Session, id: str, **payload) -> T:
+    def update_by_id(self, *, session: Session, id: str | UUID, **payload) -> T:
         """
         Update an entity by its ID.
 
@@ -77,7 +80,7 @@ class BaseRepository(Generic[T]):
         session.execute(update_exec)
         return self.get(session=session, id=id)
 
-    def delete(self, *, session: Session, id: str):
+    def delete(self, *, session: Session, id: str | UUID):
         """
         Delete an entity by its ID.
 

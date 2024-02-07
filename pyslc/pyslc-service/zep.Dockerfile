@@ -1,5 +1,4 @@
 FROM golang:1.21.2-bookworm AS BUILD
-LABEL authors="danielchalef"
 
 RUN mkdir /app
 WORKDIR /app

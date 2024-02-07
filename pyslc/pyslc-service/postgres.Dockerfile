@@ -2,6 +2,7 @@ FROM postgres:15.4-bullseye
 # Set the pgvector version
 ARG PGVECTOR_VERSION=0.5.0
 ARG DATABASE=postgres
+ARG SCHEMA=postgres
 ARG USER=postgres
 ARG PASSWORD=postgres
 
@@ -15,6 +16,8 @@ RUN apt-get update && \
 
 RUN echo "CREATE USER IF NOT EXISTS ${USER};  \
     CREATE DATABASE IF NOT EXISTS ${DATABASE};  \
+    CREATE SCHEMA AUTHORIZATION IF NOT EXISTS ${SCHEMA};  \
+    ALTER USER ${USER} WITH PASSWORD '${PASSWORD}';  \
     GRANT ALL PRIVILEGES ON DATABASE ${DATABASE} TO ${USER};"  \
     > /docker-entrypoint-initdb.d/init.sql
 

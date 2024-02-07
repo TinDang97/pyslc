@@ -5,17 +5,15 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.databases.database import database_client
-from app.repository.collection import CollectionRepository
-from app.repository.knowledge import KnowledgeRepository
 from app.schema.collection import (
     CollectionCreatePayload,
+    CollectionCreateResponse,
+    CollectionResponse,
     CollectionWithKnowledgeResponse,
     UpdateCollectionPayload,
-    CollectionResponse,
 )
 from app.schema.query import QueryParams
 from app.services.collection import CollectionService
-from app.services.knowledge import KnowledgeService
 
 router = APIRouter()
 
@@ -23,20 +21,17 @@ router = APIRouter()
 def get_service(
     db: Session = Depends(database_client.get_session),
 ) -> CollectionService:
-    return CollectionService(
-        session=db,
-        collection_repository=CollectionRepository(),
-        knowledge_service=KnowledgeService(
-            session=db, repository=KnowledgeRepository()
-        ),
-    )
+    return CollectionService(session=db)
 
 
-@router.post("/", status_code=201)
+@router.post("/", response_model=CollectionCreateResponse, status_code=201)
 def create_collection(
     payload: CollectionCreatePayload, service: CollectionService = Depends(get_service)
 ):
-    return service.create(payload)
+    try:
+        return service.create(payload)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/", response_model=List[CollectionResponse], status_code=200)
