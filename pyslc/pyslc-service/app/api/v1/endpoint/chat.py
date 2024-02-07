@@ -32,7 +32,7 @@ def get_service(session: Session = Depends(database_client.get_session)) -> Chat
     )
 
 
-@router.post("/create/agent", response_model=AgentChatResponse, status_code=201)
+@router.post("/agent", response_model=AgentChatResponse, status_code=201)
 def create_agent_chat(
     payload: AgentChatCreatePayload, service: ChatService = Depends(get_service)
 ):

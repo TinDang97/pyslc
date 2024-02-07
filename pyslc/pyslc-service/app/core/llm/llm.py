@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import sys
 from contextlib import contextmanager
 from typing import List
@@ -33,9 +34,19 @@ class LlmEngine:
             embedding_dimensions=1536,
         )
 
-        self.storage_context = StorageContext.from_defaults(
-            vector_store=self.vector_store,
-        )
+        if not os.path.exists(settings.llm_storage_dir):
+            os.makedirs(settings.llm_storage_dir)
+
+        try:
+            self.storage_context = StorageContext.from_defaults(
+                vector_store=self.vector_store,
+                persist_dir=settings.llm_storage_dir,
+            )
+        except FileNotFoundError:
+            self.storage_context = StorageContext.from_defaults(
+                vector_store=self.vector_store,
+            )
+
         self.embed_model = OpenAIEmbedding(
             api_key=settings.openai_api_key,
             embed_batch_size=16,
@@ -45,6 +56,7 @@ class LlmEngine:
         )
 
         self.index: VectorStoreIndex = VectorStoreIndex(
+            nodes=[],
             storage_context=self.storage_context,
             show_progress=True,
             service_context=self.service_context,

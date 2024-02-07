@@ -21,7 +21,7 @@ class ChatBase(BaseModel):
         return v
 
 
-class AgentChatCreatePayload(ChatBase):
+class AgentChatCreatePayload(BaseModel):
     collection_id: str = Field(..., title="Collection ID")
 
 
