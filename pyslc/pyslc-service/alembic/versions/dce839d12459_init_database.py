@@ -1,8 +1,8 @@
-"""empty message
+"""init database
 
-Revision ID: e5e8e29e960d
+Revision ID: dce839d12459
 Revises:
-Create Date: 2024-02-05 22:11:06.499970
+Create Date: 2024-02-07 20:41:42.044365
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "e5e8e29e960d"
+revision: str = "dce839d12459"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,7 +25,7 @@ def upgrade() -> None:
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("description", sa.String(), nullable=False),
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("is_deleted", sa.Integer(), nullable=False),
+        sa.Column("is_deleted", sa.Boolean(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.Column("deleted_at", sa.DateTime(), nullable=True),
@@ -48,7 +48,7 @@ def upgrade() -> None:
         sa.Column("description", sa.String(), nullable=True),
         sa.Column("collection_id", sa.UUID(), nullable=False),
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("is_deleted", sa.Integer(), nullable=False),
+        sa.Column("is_deleted", sa.Boolean(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.Column("deleted_at", sa.DateTime(), nullable=True),
@@ -73,7 +73,7 @@ def upgrade() -> None:
         sa.Column("file_hash", sa.String(), nullable=False),
         sa.Column("collection_id", sa.UUID(), nullable=False),
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("is_deleted", sa.Integer(), nullable=False),
+        sa.Column("is_deleted", sa.Boolean(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.Column("deleted_at", sa.DateTime(), nullable=True),
@@ -92,7 +92,7 @@ def upgrade() -> None:
         sa.Column("content", sa.String(), nullable=False),
         sa.Column("collection_id", sa.UUID(), nullable=False),
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("is_deleted", sa.Integer(), nullable=False),
+        sa.Column("is_deleted", sa.Boolean(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.Column("deleted_at", sa.DateTime(), nullable=True),
@@ -113,7 +113,7 @@ def upgrade() -> None:
         sa.Column("next_message_id", sa.UUID(), nullable=True),
         sa.Column("chat_id", sa.UUID(), nullable=False),
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("is_deleted", sa.Integer(), nullable=False),
+        sa.Column("is_deleted", sa.Boolean(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.Column("deleted_at", sa.DateTime(), nullable=True),

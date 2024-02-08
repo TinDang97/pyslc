@@ -1,4 +1,6 @@
-from typing import List
+from __future__ import annotations
+
+from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
@@ -9,27 +11,59 @@ from app.schema.knowledge import (
     KnowledgeBaseListPayloadResponse,
 )
 from app.repository.knowledge import KnowledgeRepository
+from app.repository.collection import CollectionRepository
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.services.chat import ChatService
 
 
 class KnowledgeService(ServiceBase):
-    def __init__(self, repository: KnowledgeRepository, session: Session):
-        self.repository = repository
+    def __init__(
+        self,
+        *,
+        knowledge_repository: KnowledgeRepository | None = None,
+        collection_repository: CollectionRepository | None = None,
+        chat_service: Optional["ChatService"] | None = None,
+        session: Session,
+    ):
+        from app.services.chat import ChatService
+        from app.services.collection import CollectionService
+
+        self.knowledge_repository = knowledge_repository or KnowledgeRepository()
+        self.collection_repository = collection_repository or CollectionRepository()
+        self.chat_service = chat_service or ChatService(
+            collection_service=CollectionService(
+                collection_repository=self.collection_repository,
+                knowledge_service=self,
+                session=session,
+            ),
+            session=session,
+        )
         self.session = session
 
     def create_knowledge_base(
         self, payload: KnowledgeBaseCreatePayload
     ) -> KnowledgeBaseResponse:
-        return self.repository.create_knowledge(
+        if not self.collection_repository.get(
+            session=self.session, id=payload.collection_id
+        ):
+            raise ValueError("Collection does not exist")
+
+        return self.knowledge_repository.create_knowledge(
             session=self.session, **payload.model_dump()
         )
 
     def get_knowledge_base(self, id: str) -> KnowledgeBaseResponse:
-        return self.repository.get_knowledge_by_id(session=self.session, id=id)
+        return self.knowledge_repository.get_knowledge_by_id(
+            session=self.session, id=id
+        )
 
     def get_knowledge_bases(
         self, limit: int = 10, offset: int = 0
     ) -> List[KnowledgeBaseResponse]:
-        knowledge_parts = self.repository.get_knowledge(
+        knowledge_parts = self.knowledge_repository.get_knowledge(
             session=self.session, limit=limit, offset=offset
         )
         return [
@@ -44,7 +78,7 @@ class KnowledgeService(ServiceBase):
     def get_knowledge_bases_by_collection(
         self, collection_id: str, limit: int = 10, offset: int = 0
     ) -> KnowledgeBaseListPayloadResponse:
-        knowledge_parts = self.repository.get_knowledge_by_collection(
+        knowledge_parts = self.knowledge_repository.get_knowledge_by_collection(
             session=self.session,
             collection_id=collection_id,
             limit=limit,
@@ -58,16 +92,18 @@ class KnowledgeService(ServiceBase):
         )
 
     def get(self, id):
-        return self.repository.get(session=self.session, id=id)
+        return self.knowledge_repository.get(session=self.session, id=id)
 
     def list(self, limit: int = 10, offset: int = 0):
-        return self.repository.get_all(session=self.session, limit=limit, offset=offset)
+        return self.knowledge_repository.get_all(
+            session=self.session, limit=limit, offset=offset
+        )
 
     def create(self, data):
-        return self.repository.create(session=self.session, **data)
+        return self.knowledge_repository.create(session=self.session, **data)
 
     def update(self, id, data):
-        return self.repository.update(session=self.session, id=id, **data)
+        return self.knowledge_repository.update(session=self.session, id=id, **data)
 
     def delete(self, id):
-        return self.repository.delete(session=self.session, id=id)
+        return self.knowledge_repository.delete(session=self.session, id=id)

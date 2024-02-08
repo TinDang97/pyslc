@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from typing import List
+from uuid import UUID
 
 from sqlalchemy.orm import joinedload
 
@@ -23,7 +26,7 @@ class CollectionRepository(BaseRepository):
         )
         return collection
 
-    def get_collection_by_id(self, session, id: str) -> Collection:
+    def get_collection_by_id(self, session, id: str | UUID) -> Collection:
         collection = (
             session.query(Collection)
             .options(joinedload(Collection.knowledge_parts))
@@ -35,10 +38,10 @@ class CollectionRepository(BaseRepository):
     def create_collection(self, session, **payload) -> Collection:
         return self.create(session=session, **payload)
 
-    def delete_collection(self, session, id: str):
+    def delete_collection(self, session, id: str | UUID):
         return self.delete(session=session, id=id)
 
-    def update_collection(self, session, id: str, **payload) -> Collection:
+    def update_collection(self, session, id: str | UUID, **payload) -> Collection:
         collection = map_dict_to_entity(**payload)
         return self.update_by_id(session=session, id=id, entity=collection)
 

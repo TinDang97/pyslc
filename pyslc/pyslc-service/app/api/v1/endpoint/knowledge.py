@@ -2,22 +2,21 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
 from app.databases.database import database_client
-from app.repository.knowledge import KnowledgeRepository
 from app.schema.knowledge import (
     KnowledgeBaseCreatePayload,
-    KnowledgeBaseResponse,
     KnowledgeBaseListPayloadResponse,
+    KnowledgeBaseResponse,
 )
 from app.schema.query import QueryParams
 from app.services.knowledge import KnowledgeService
-
 
 router = APIRouter()
 
 
 def get_service(db: Session = Depends(database_client.get_session)) -> KnowledgeService:
-    return KnowledgeService(session=db, repository=KnowledgeRepository())
+    return KnowledgeService(session=db)
 
 
 @router.post("/", response_model=KnowledgeBaseResponse, status_code=201)

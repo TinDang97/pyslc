@@ -7,7 +7,7 @@ from app.core.util import split_string
 
 class ChatBase(BaseModel):
     message: str = Field(..., title="Message")
-    collection_id: UUID = Field(..., title="Collection ID")
+    session_id: UUID = Field(..., title="Collection ID")
 
     @field_validator("message")  # noqa
     @classmethod
@@ -21,10 +21,18 @@ class ChatBase(BaseModel):
         return v
 
 
+class AgentChatCreatePayload(BaseModel):
+    collection_id: str = Field(..., title="Collection ID")
+
+
+class AgentChatResponse(BaseModel):
+    session_id: UUID
+
+
 class ChatCreatePayload(ChatBase):
     pass
 
 
 class ChatResponsePayload(BaseModel):
     message: str
-    collection_id: UUID
+    session_id: UUID

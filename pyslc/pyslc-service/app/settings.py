@@ -53,6 +53,9 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-3.5-turbo-1106"
     zep_url: str = "http://localhost:8000"
 
+    # settings of the pyslc llm storage
+    llm_storage_dir: str = "./llm_storage"
+
 
 # create an instance of the Settings class
 if os.environ.get("PYSLC_ENV") == "production":
