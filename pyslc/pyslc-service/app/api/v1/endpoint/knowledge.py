@@ -1,11 +1,12 @@
 from typing import List
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from app.core.container import Container
+from dependency_injector.wiring import Provide, inject
+from fastapi import APIRouter, Depends, status
 
-from app.databases.database import database_client
 from app.schema.knowledge import (
     KnowledgeBaseCreatePayload,
+    KnowledgeBaseUpdatePayload,
     KnowledgeBaseListPayloadResponse,
     KnowledgeBaseResponse,
 )
@@ -13,43 +14,71 @@ from app.schema.query import QueryParams
 from app.services.knowledge import KnowledgeService
 
 router = APIRouter()
+TEST_USER = "test-user"
 
 
-def get_service(db: Session = Depends(database_client.get_session)) -> KnowledgeService:
-    return KnowledgeService(session=db)
-
-
-@router.post("/", response_model=KnowledgeBaseResponse, status_code=201)
+@router.post(
+    "/", response_model=KnowledgeBaseResponse, status_code=status.HTTP_201_CREATED
+)
+@inject
 def create_knowledge_base(
     payload: KnowledgeBaseCreatePayload,
-    service: KnowledgeService = Depends(get_service),
+    service: KnowledgeService = Depends(Provide[Container.knowledge_service]),
 ):
-    return service.create_knowledge_base(payload)
+    return service.create_knowledge_base(payload, TEST_USER)
 
 
-@router.get("/{id}", response_model=KnowledgeBaseResponse, status_code=200)
-def get_knowledge_base(id: str, service: KnowledgeService = Depends(get_service)):
-    return service.get_knowledge_base(id)
+@router.get(
+    "/{uid}", response_model=KnowledgeBaseResponse, status_code=status.HTTP_200_OK
+)
+@inject
+def get_knowledge_base(
+    uid: str, service: KnowledgeService = Depends(Provide[Container.knowledge_service])
+):
+    return service.get_knowledge(uid)
 
 
-@router.get("/", response_model=List[KnowledgeBaseResponse], status_code=200)
+@router.get(
+    "/", response_model=List[KnowledgeBaseResponse], status_code=status.HTTP_200_OK
+)
+@inject
 def get_knowledge_bases(
     query: QueryParams = Depends(QueryParams),
-    service: KnowledgeService = Depends(get_service),
+    service: KnowledgeService = Depends(Provide[Container.knowledge_service]),
 ):
-    return service.get_knowledge_bases(query.limit, query.offset)
+    return service.get_knowledges(query.limit, query.offset)
 
 
 @router.get(
     "/collection/{collection_id}",
     response_model=KnowledgeBaseListPayloadResponse,
-    status_code=200,
+    status_code=status.HTTP_200_OK,
 )
+@inject
 def get_knowledge_bases_by_collection(
     collection_id: str,
     query: QueryParams = Depends(QueryParams),
-    service: KnowledgeService = Depends(get_service),
+    service: KnowledgeService = Depends(Provide[Container.knowledge_service]),
 ):
     return service.get_knowledge_bases_by_collection(
         collection_id, query.limit, query.offset
     )
+
+
+@router.put("/{uid}", status_code=status.HTTP_204_NO_CONTENT)
+@inject
+def update_knowledge_base(
+    uid: str,
+    payload: KnowledgeBaseUpdatePayload,
+    service: KnowledgeService = Depends(Provide[Container.knowledge_service]),
+):
+    return service.update_knowledge_base(uid, payload, TEST_USER)
+
+
+@router.delete("/{uid}", status_code=status.HTTP_204_NO_CONTENT)
+@inject
+def delete_knowledge_base(
+    uid: str,
+    service: KnowledgeService = Depends(Provide[Container.knowledge_service]),
+):
+    return service.delete_knowledge_base(uid, TEST_USER)

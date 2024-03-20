@@ -17,10 +17,14 @@ uvicorn = "^0.25.0"
 llama-index = "^0.9.35"
 zep-python = "^1.5.0"
 psycopg2 = "^2.9.9"
+dependency-injector = "^4.41.0"
+orjson = "^3.9.15"
 
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.6.0"
+ruff = "^0.3.3"
+mypy = "^1.9.0"
 
 [build-system]
 requires = ["poetry-core"]

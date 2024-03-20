@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 class ServiceBase(ABC):
     @abstractmethod
-    def get(self, id):
+    def get(self, uid):
         pass
 
     @abstractmethod
@@ -11,13 +11,13 @@ class ServiceBase(ABC):
         pass
 
     @abstractmethod
-    def create(self, data):
+    def create(self, data, created_by):
         pass
 
     @abstractmethod
-    def update(self, id, data):
+    def update(self, uid, data, updated_by):
         pass
 
     @abstractmethod
-    def delete(self, id):
+    def delete(self, uid, deleted_by):
         pass

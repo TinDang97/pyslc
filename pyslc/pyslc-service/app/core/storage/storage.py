@@ -6,7 +6,7 @@ T = TypeVar("T")
 K = TypeVar("K")
 
 
-class ChatStorage(Generic[K, T]):
+class Storage(Generic[K, T]):
     def __init__(self):
         self._storage = dict[K, T]()
 
@@ -21,3 +21,6 @@ class ChatStorage(Generic[K, T]):
 
     def clear(self, session_id: K) -> None:
         self._storage.pop(session_id)
+
+    def __call__(self, session_id: K) -> T | None:
+        return self.get(session_id)

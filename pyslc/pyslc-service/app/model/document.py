@@ -9,8 +9,6 @@ if TYPE_CHECKING:
 
 
 class Document(ModelBase, TimestampMixin, UserMixin):
-    __tablename__ = "document"
-
     name: Mapped[str] = mapped_column(String, nullable=False)
     file_name: Mapped[str] = mapped_column(String, nullable=False)
     file_extension = mapped_column(String, nullable=False)

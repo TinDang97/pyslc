@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import FastAPI
 
 from app.settings import settings
@@ -23,7 +24,7 @@ async def health_check():
 class AppBuilder:
     def __init__(
         self,
-        app: FastAPI = None,
+        app: Optional[FastAPI] = None,
     ):
         if app:
             self.app = app

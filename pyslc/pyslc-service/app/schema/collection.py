@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 from typing import Optional, List
 from uuid import UUID
 
 from pydantic import BaseModel
+
+from app.core.types import UIDType
 
 
 class CollectionBase(BaseModel):
@@ -20,12 +24,17 @@ class UpdateCollectionPayload(CollectionBase):
 
 
 class CollectionResponse(CollectionBase):
-    id: UUID
+    uid: UUID
+
+
+class KnowledgeBaseResponse(BaseModel):
+    uid: UIDType
+    content: str
 
 
 class CollectionWithKnowledgeResponse(CollectionBase):
-    id: UUID
-    knowledge_content: List[str]
+    uid: UIDType
+    knowledges: List[KnowledgeBaseResponse]
 
 
 class CollectionCreatePayload(CollectionBase):
@@ -33,5 +42,5 @@ class CollectionCreatePayload(CollectionBase):
 
 
 class CollectionCreateResponse(CollectionBase):
-    id: UUID
+    uid: UIDType
     doc_added_count: int

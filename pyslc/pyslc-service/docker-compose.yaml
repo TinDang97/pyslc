@@ -72,7 +72,7 @@ services:
       - ZEP_EXTRACTORS_MESSAGES_EMBEDDINGS_DIMENSIONS=1536
       - ZEP_EXTRACTORS_MESSAGES_SUMMARIZER_EMBEDDINGS_SERVICE=openai
       - ZEP_EXTRACTORS_MESSAGES_SUMMARIZER_EMBEDDINGS_DIMENSIONS=1536
-      - ZEP_OPENAI_API_KEY=
+      - ZEP_OPENAI_API_KEY=your-openai-api-key
     healthcheck:
       test: timeout 10s bash -c ':> /dev/tcp/127.0.0.1/8000' || exit 1
       interval: 5s

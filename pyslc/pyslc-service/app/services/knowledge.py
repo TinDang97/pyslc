@@ -1,109 +1,96 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List, TYPE_CHECKING
 
-from sqlalchemy.orm import Session
-
-from app.services.base import ServiceBase
+from app.core.types import UIDType
 from app.schema.knowledge import (
     KnowledgeBaseCreatePayload,
-    KnowledgeBaseResponse,
     KnowledgeBaseListPayloadResponse,
+    KnowledgeBaseResponse,
+    KnowledgeBaseUpdatePayload,
 )
-from app.repository.knowledge import KnowledgeRepository
-from app.repository.collection import CollectionRepository
-
-from typing import TYPE_CHECKING
+from app.services.base import ServiceBase
 
 if TYPE_CHECKING:
-    from app.services.chat import ChatService
+    from app.repository.knowledge import KnowledgeRepository
+    from app.repository.collection import CollectionRepository
 
 
 class KnowledgeService(ServiceBase):
     def __init__(
         self,
         *,
-        knowledge_repository: KnowledgeRepository | None = None,
-        collection_repository: CollectionRepository | None = None,
-        chat_service: Optional["ChatService"] | None = None,
-        session: Session,
+        knowledge_repository: "KnowledgeRepository",
+        collection_repository: "CollectionRepository",
     ):
-        from app.services.chat import ChatService
-        from app.services.collection import CollectionService
-
-        self.knowledge_repository = knowledge_repository or KnowledgeRepository()
-        self.collection_repository = collection_repository or CollectionRepository()
-        self.chat_service = chat_service or ChatService(
-            collection_service=CollectionService(
-                collection_repository=self.collection_repository,
-                knowledge_service=self,
-                session=session,
-            ),
-            session=session,
-        )
-        self.session = session
+        self.knowledge_repository = knowledge_repository
+        self.collection_repository = collection_repository
 
     def create_knowledge_base(
-        self, payload: KnowledgeBaseCreatePayload
+        self, payload: KnowledgeBaseCreatePayload, created_by: str
     ) -> KnowledgeBaseResponse:
-        if not self.collection_repository.get(
-            session=self.session, id=payload.collection_id
-        ):
+        if not self.collection_repository.is_exists(uid=payload.collection_uid):
             raise ValueError("Collection does not exist")
-
-        return self.knowledge_repository.create_knowledge(
-            session=self.session, **payload.model_dump()
+        knowledge = self.knowledge_repository.create_knowledge(
+            payload=payload.model_dump(), created_by=created_by
         )
+        return KnowledgeBaseResponse.model_validate(knowledge, from_attributes=True)
 
-    def get_knowledge_base(self, id: str) -> KnowledgeBaseResponse:
-        return self.knowledge_repository.get_knowledge_by_id(
-            session=self.session, id=id
-        )
+    def get_knowledge(self, uid: UIDType) -> KnowledgeBaseResponse:
+        knowledge = self.knowledge_repository.get(uid)
+        return KnowledgeBaseResponse.model_validate(knowledge, from_attributes=True)
 
-    def get_knowledge_bases(
+    def get_knowledges(
         self, limit: int = 10, offset: int = 0
     ) -> List[KnowledgeBaseResponse]:
-        knowledge_parts = self.knowledge_repository.get_knowledge(
-            session=self.session, limit=limit, offset=offset
+        knowledge_parts = self.knowledge_repository.get_knowledges(
+            limit=limit, offset=offset
         )
-        return [
-            KnowledgeBaseResponse(
-                collection_id=knowledge_part.collection_id,
-                content=knowledge_part.content,
-                id=knowledge_part.id,
+        return list(
+            map(
+                lambda x: KnowledgeBaseResponse.model_validate(x, from_attributes=True),
+                knowledge_parts,
             )
-            for knowledge_part in knowledge_parts
-        ]
+        )
 
     def get_knowledge_bases_by_collection(
-        self, collection_id: str, limit: int = 10, offset: int = 0
+        self, collection_id: UIDType, limit: int = 10, offset: int = 0
     ) -> KnowledgeBaseListPayloadResponse:
-        knowledge_parts = self.knowledge_repository.get_knowledge_by_collection(
-            session=self.session,
+        knowledges = self.knowledge_repository.get_knowledge_by_collection(
             collection_id=collection_id,
             limit=limit,
             offset=offset,
         )
 
         # parse the knowledge parts to get the collection name and the data
-        data = [knowledge_part.content for knowledge_part in knowledge_parts]
-        return KnowledgeBaseListPayloadResponse(
-            collection_id=knowledge_parts[0].collection_id, data=data, size=len(data)
+        return KnowledgeBaseListPayloadResponse.model_validate(
+            dict(collection_id=collection_id, data=knowledges, size=len(knowledges)),
+            from_attributes=True,
         )
 
-    def get(self, id):
-        return self.knowledge_repository.get(session=self.session, id=id)
+    def update_knowledge_base(
+        self, uid: UIDType, payload: KnowledgeBaseUpdatePayload, updated_by: str
+    ):
+        self.knowledge_repository.update(
+            payload=payload.model_dump(), updated_by=updated_by, uid=uid
+        )
+
+    def delete_knowledge_base(self, uid: UIDType, deleted_by: str) -> None:
+        self.knowledge_repository.delete(uid=uid, deleted_by=deleted_by)
+
+    def get(self, uid: UIDType):
+        return self.get_knowledge(uid)
 
     def list(self, limit: int = 10, offset: int = 0):
-        return self.knowledge_repository.get_all(
-            session=self.session, limit=limit, offset=offset
-        )
+        return self.get_knowledges(limit, offset)
 
-    def create(self, data):
-        return self.knowledge_repository.create(session=self.session, **data)
+    def create(self, payload: KnowledgeBaseCreatePayload, created_by: str):
+        return self.create_knowledge_base(payload, created_by)
 
-    def update(self, id, data):
-        return self.knowledge_repository.update(session=self.session, id=id, **data)
+    def update(
+        self, uid: UIDType, payload: KnowledgeBaseUpdatePayload, updated_by: str
+    ):
+        return self.update_knowledge_base(uid, payload, updated_by)
 
-    def delete(self, id):
-        return self.knowledge_repository.delete(session=self.session, id=id)
+    def delete(self, uid: UIDType, deleted_by: str):
+        return self.delete_knowledge_base(uid, deleted_by)

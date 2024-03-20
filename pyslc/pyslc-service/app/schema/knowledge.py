@@ -1,12 +1,15 @@
+from __future__ import annotations
+
 from typing import List
-from uuid import UUID
 
 from pydantic import BaseModel
+
+from app.core.types import UIDType
 
 
 class _Base(BaseModel):
     content: str
-    collection_id: UUID
+    collection_uid: UIDType
 
 
 class KnowledgeBasePayload(_Base):
@@ -18,13 +21,18 @@ class KnowledgeBaseCreatePayload(_Base):
 
 
 class KnowledgeBaseResponse(_Base):
-    id: UUID
+    uid: UIDType
+    content: str
 
 
 class KnowledgeBaseListPayloadResponse(BaseModel):
-    collection_id: UUID
-    data: List[str]
+    collection_uid: UIDType
+    data: List[KnowledgeBaseResponse]
     size: int
+
+
+class KnowledgeBaseUpdatePayload(BaseModel):
+    content: str
 
 
 class KnowledgeBaseDeletePayload(BaseModel):

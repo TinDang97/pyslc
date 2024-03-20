@@ -55,6 +55,7 @@ class Settings(BaseSettings):
 
     # settings of the pyslc llm storage
     llm_storage_dir: str = "./llm_storage"
+    trusted_hosts: list[str] = ["localhost"]
 
 
 # create an instance of the Settings class

@@ -1,54 +1,58 @@
-__all__ = ["database_client", "Base"]
-
 from contextlib import contextmanager
+from logging import Logger
+from typing import Any, Generator
 
 from sqlalchemy import create_engine, MetaData
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
+
+from app.core.util import json_serializer, json_deserializer
 from app.settings import settings
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import DeclarativeBase
+
+__all__ = ["Database", "Base"]
 
 
-Base = declarative_base(metadata=MetaData(schema=settings.db.schema))
+constraint_naming_conventions = {
+    "ix": "ix_%(column_0_label)s",
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s",
+}
+
+
+class Base(DeclarativeBase):
+    __abstract__ = True
+    __table_args__ = {"schema": settings.db.schema} if settings.db.schema else None
+    metadata = MetaData(
+        schema=settings.db.schema, naming_convention=constraint_naming_conventions
+    )
 
 
 class Database:
-    def __init__(self, db_url: str):
-        self._engine = create_engine(db_url)
+    def __init__(self, db_url: str, *, schema: str = "public", logger: Logger):
+        self._engine = create_engine(
+            db_url, json_serializer=json_serializer, json_deserializer=json_deserializer
+        )
         self._session_factory = sessionmaker(
             autocommit=False,
             autoflush=False,
             bind=self._engine,
         )
+        self.schema = schema
+        self.logger = logger
 
     def create_database(self) -> None:
         Base.metadata.create_all(self._engine)
 
     @contextmanager
-    def get_session(self):
+    def session(self) -> Generator[Session, Any, None]:
         session = self._session_factory()
         try:
             yield session
-        except Exception:
+        except Exception as e:
+            self.logger.error(f"Error occurred: {e}", exc_info=True)
             session.rollback()
             raise
         finally:
             session.close()
-
-
-class DatabaseContainer:
-    instance = None
-
-    @classmethod
-    def init(cls):
-        cls.instance = Database(settings.db.db_url)
-
-    @classmethod
-    def get_session(cls):
-        if cls.instance is None:
-            cls.init()
-
-        with cls.instance.get_session() as session:
-            yield session
-
-
-database_client = DatabaseContainer

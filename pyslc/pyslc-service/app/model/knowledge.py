@@ -11,8 +11,6 @@ if TYPE_CHECKING:
 
 
 class Knowledge(ModelBase, TimestampMixin, UserMixin):
-    __tablename__ = "knowledge"
-
     content: Mapped[str] = mapped_column(String, nullable=False)
     collection_id: Mapped[UUID] = mapped_column(
         ForeignKey("collection.id"), nullable=False
