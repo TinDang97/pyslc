@@ -60,6 +60,6 @@ class Settings(BaseSettings):
 
 # create an instance of the Settings class
 if os.environ.get("PYSLC_ENV") == "production":
-    settings = Settings(_env_file=".env")
+    settings = Settings(_env_file=".env")  # type: ignore
 else:
-    settings = Settings(_env_file="dev.env")
+    settings = Settings(_env_file="dev.env")  # type: ignore

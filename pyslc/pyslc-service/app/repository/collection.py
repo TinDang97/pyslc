@@ -44,10 +44,8 @@ class CollectionRepository(BaseRepository[Collection]):
     def delete_collection(self, uid: str | UUID, deleted_by: str):
         return self.delete(uid=uid, deleted_by=deleted_by)
 
-    def update_collection(
-        self, uid: str | UUID, payload: Dict, updated_by: str
-    ) -> Collection:
-        return self.update(uid=uid, payload=payload, updated_by=updated_by)
+    def update_collection(self, uid: str | UUID, payload: Dict, updated_by: str):
+        self.update(uid=uid, payload=payload, updated_by=updated_by)
 
     def get_collection_by_name(self, name: str) -> Collection | None:
         with self.session_factory() as session:

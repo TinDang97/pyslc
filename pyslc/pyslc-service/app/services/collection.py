@@ -68,6 +68,9 @@ class CollectionService(ServiceBase):
         collection = self.collection_repository.update_collection(
             uid, payload=payload.model_dump(), updated_by=updated_by
         )
+        if not collection:
+            raise ValueError("Collection not found")
+
         return CollectionResponse(
             uid=collection.uid, name=collection.name, description=collection.description
         )
