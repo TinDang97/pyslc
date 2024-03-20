@@ -9,6 +9,8 @@ if TYPE_CHECKING:
 
 
 class Document(ModelBase, TimestampMixin, UserMixin):
+    __tablename__ = "document"
+
     name: Mapped[str] = mapped_column(String, nullable=False)
     file_name: Mapped[str] = mapped_column(String, nullable=False)
     file_extension = mapped_column(String, nullable=False)
@@ -17,10 +19,8 @@ class Document(ModelBase, TimestampMixin, UserMixin):
     file_type: Mapped[str] = mapped_column(String, nullable=False)
     file_hash: Mapped[str] = mapped_column(String, nullable=False)
 
-    collection_id = mapped_column(ForeignKey("collection.id"), nullable=False)
-    collection: Mapped["Collection"] = relationship(
-        back_populates="documents", uselist=False
-    )
+    collection_id = mapped_column(ForeignKey("collection.uid"), nullable=False)
+    collection: Mapped["Collection"] = relationship(back_populates="documents", uselist=False)
 
     def __repr__(self):
         return f"<Document(name={self.name}, file_name={self.file_name}, file_hash={self.file_hash})>"

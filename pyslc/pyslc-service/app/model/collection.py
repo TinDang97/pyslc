@@ -10,13 +10,13 @@ if TYPE_CHECKING:
 
 
 class Collection(ModelBase, TimestampMixin, UserMixin):
+    __tablename__ = "collection"
+
     name: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
     description: Mapped[str] = mapped_column(String, nullable=False)
 
     documents: Mapped[List["Document"]] = relationship(back_populates="collection")
-    knowledge_parts: Mapped[List["Knowledge"]] = relationship(
-        back_populates="collection"
-    )
+    knowledge_parts: Mapped[List["Knowledge"]] = relationship(back_populates="collection")
     chats: Mapped[List["Chat"]] = relationship(back_populates="collection")
 
     def __repr__(self):

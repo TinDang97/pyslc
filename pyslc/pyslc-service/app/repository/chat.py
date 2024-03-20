@@ -27,9 +27,7 @@ class ChatRepository(BaseRepository[Chat]):
         :return: chat
         """
         with self.session_factory() as session:
-            chat = select(Chat).filter(
-                Chat.session_id == session_id, Chat.is_deleted.__eq__(False)
-            )
+            chat = select(Chat).filter(Chat.session_id == session_id, Chat.is_deleted.__eq__(False))
             Chat.is_deleted.__eq__(False)
         return session.execute(chat).scalar_one_or_none()
 
@@ -41,9 +39,7 @@ class ChatRepository(BaseRepository[Chat]):
         :return: chat
         """
         with self.session_factory() as session:
-            smt = select(Chat).filter(
-                Chat.collection_id == collection_id, Chat.is_deleted.__eq__(False)
-            )
+            smt = select(Chat).filter(Chat.collection_id == collection_id, Chat.is_deleted.__eq__(False))
         return session.scalars(smt).all()
 
     def get_by_user_id(self, user_id: str) -> Sequence[Chat]:
@@ -54,7 +50,5 @@ class ChatRepository(BaseRepository[Chat]):
         :return: chat
         """
         with self.session_factory() as session:
-            smt = select(Chat).filter(
-                Chat.created_by == user_id, Chat.is_deleted.__eq__(False)
-            )
+            smt = select(Chat).filter(Chat.created_by == user_id, Chat.is_deleted.__eq__(False))
         return session.scalars(smt).all()

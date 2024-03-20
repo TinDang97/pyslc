@@ -2,7 +2,7 @@
 
 Revision ID: dce839d12459
 Revises:
-Create Date: 2024-02-07 20:41:42.044365
+Create Date: 2024-03-20 21:28:11.535869
 
 """
 from typing import Sequence, Union
@@ -24,7 +24,7 @@ def upgrade() -> None:
         "collection",
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("description", sa.String(), nullable=False),
-        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("uid", sa.UUID(), nullable=False),
         sa.Column("is_deleted", sa.Boolean(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
@@ -32,7 +32,7 @@ def upgrade() -> None:
         sa.Column("created_by", sa.Integer(), nullable=True),
         sa.Column("updated_by", sa.Integer(), nullable=True),
         sa.Column("deleted_by", sa.Integer(), nullable=True),
-        sa.PrimaryKeyConstraint("id"),
+        sa.PrimaryKeyConstraint("uid", name=op.f("pk_collection")),
         schema="pyslc",
     )
     op.create_index(
@@ -47,7 +47,8 @@ def upgrade() -> None:
         sa.Column("title", sa.String(), nullable=False),
         sa.Column("description", sa.String(), nullable=True),
         sa.Column("collection_id", sa.UUID(), nullable=False),
-        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("session_id", sa.String(), nullable=False),
+        sa.Column("uid", sa.UUID(), nullable=False),
         sa.Column("is_deleted", sa.Boolean(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
@@ -57,9 +58,10 @@ def upgrade() -> None:
         sa.Column("deleted_by", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
             ["collection_id"],
-            ["pyslc.collection.id"],
+            ["pyslc.collection.uid"],
+            name=op.f("fk_chat_collection_id_collection"),
         ),
-        sa.PrimaryKeyConstraint("id"),
+        sa.PrimaryKeyConstraint("uid", name=op.f("pk_chat")),
         schema="pyslc",
     )
     op.create_table(
@@ -72,7 +74,7 @@ def upgrade() -> None:
         sa.Column("file_type", sa.String(), nullable=False),
         sa.Column("file_hash", sa.String(), nullable=False),
         sa.Column("collection_id", sa.UUID(), nullable=False),
-        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("uid", sa.UUID(), nullable=False),
         sa.Column("is_deleted", sa.Boolean(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
@@ -82,16 +84,17 @@ def upgrade() -> None:
         sa.Column("deleted_by", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
             ["collection_id"],
-            ["pyslc.collection.id"],
+            ["pyslc.collection.uid"],
+            name=op.f("fk_document_collection_id_collection"),
         ),
-        sa.PrimaryKeyConstraint("id"),
+        sa.PrimaryKeyConstraint("uid", name=op.f("pk_document")),
         schema="pyslc",
     )
     op.create_table(
         "knowledge",
         sa.Column("content", sa.String(), nullable=False),
         sa.Column("collection_id", sa.UUID(), nullable=False),
-        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("uid", sa.UUID(), nullable=False),
         sa.Column("is_deleted", sa.Boolean(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
@@ -101,9 +104,10 @@ def upgrade() -> None:
         sa.Column("deleted_by", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
             ["collection_id"],
-            ["pyslc.collection.id"],
+            ["pyslc.collection.uid"],
+            name=op.f("fk_knowledge_collection_id_collection"),
         ),
-        sa.PrimaryKeyConstraint("id"),
+        sa.PrimaryKeyConstraint("uid", name=op.f("pk_knowledge")),
         schema="pyslc",
     )
     op.create_table(
@@ -112,7 +116,7 @@ def upgrade() -> None:
         sa.Column("previous_message_id", sa.UUID(), nullable=True),
         sa.Column("next_message_id", sa.UUID(), nullable=True),
         sa.Column("chat_id", sa.UUID(), nullable=False),
-        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("uid", sa.UUID(), nullable=False),
         sa.Column("is_deleted", sa.Boolean(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
@@ -120,19 +124,18 @@ def upgrade() -> None:
         sa.Column("created_by", sa.Integer(), nullable=True),
         sa.Column("updated_by", sa.Integer(), nullable=True),
         sa.Column("deleted_by", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["chat_id"],
-            ["pyslc.chat.id"],
-        ),
+        sa.ForeignKeyConstraint(["chat_id"], ["pyslc.chat.uid"], name=op.f("fk_message_chat_id_chat")),
         sa.ForeignKeyConstraint(
             ["next_message_id"],
-            ["pyslc.message.id"],
+            ["pyslc.message.uid"],
+            name=op.f("fk_message_next_message_id_message"),
         ),
         sa.ForeignKeyConstraint(
             ["previous_message_id"],
-            ["pyslc.message.id"],
+            ["pyslc.message.uid"],
+            name=op.f("fk_message_previous_message_id_message"),
         ),
-        sa.PrimaryKeyConstraint("id"),
+        sa.PrimaryKeyConstraint("uid", name=op.f("pk_message")),
         schema="pyslc",
     )
     # ### end Alembic commands ###
@@ -144,8 +147,6 @@ def downgrade() -> None:
     op.drop_table("knowledge", schema="pyslc")
     op.drop_table("document", schema="pyslc")
     op.drop_table("chat", schema="pyslc")
-    op.drop_index(
-        op.f("ix_pyslc_collection_name"), table_name="collection", schema="pyslc"
-    )
+    op.drop_index(op.f("ix_pyslc_collection_name"), table_name="collection", schema="pyslc")
     op.drop_table("collection", schema="pyslc")
     # ### end Alembic commands ###

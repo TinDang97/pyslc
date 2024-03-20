@@ -17,9 +17,7 @@ router = APIRouter()
 TEST_USER = "test-user"
 
 
-@router.post(
-    "/", response_model=KnowledgeBaseResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("/", response_model=KnowledgeBaseResponse, status_code=status.HTTP_201_CREATED)
 @inject
 def create_knowledge_base(
     payload: KnowledgeBaseCreatePayload,
@@ -28,19 +26,13 @@ def create_knowledge_base(
     return service.create_knowledge_base(payload, TEST_USER)
 
 
-@router.get(
-    "/{uid}", response_model=KnowledgeBaseResponse, status_code=status.HTTP_200_OK
-)
+@router.get("/{uid}", response_model=KnowledgeBaseResponse, status_code=status.HTTP_200_OK)
 @inject
-def get_knowledge_base(
-    uid: str, service: KnowledgeService = Depends(Provide[Container.knowledge_service])
-):
+def get_knowledge_base(uid: str, service: KnowledgeService = Depends(Provide[Container.knowledge_service])):
     return service.get_knowledge(uid)
 
 
-@router.get(
-    "/", response_model=List[KnowledgeBaseResponse], status_code=status.HTTP_200_OK
-)
+@router.get("/", response_model=List[KnowledgeBaseResponse], status_code=status.HTTP_200_OK)
 @inject
 def get_knowledge_bases(
     query: QueryParams = Depends(QueryParams),
@@ -60,9 +52,7 @@ def get_knowledge_bases_by_collection(
     query: QueryParams = Depends(QueryParams),
     service: KnowledgeService = Depends(Provide[Container.knowledge_service]),
 ):
-    return service.get_knowledge_bases_by_collection(
-        collection_id, query.limit, query.offset
-    )
+    return service.get_knowledge_bases_by_collection(collection_id, query.limit, query.offset)
 
 
 @router.put("/{uid}", status_code=status.HTTP_204_NO_CONTENT)

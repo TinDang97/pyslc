@@ -16,9 +16,7 @@ class Agent:
         return self.engine.chat(message, chat_history)
 
     def stream(self, message: str, chat_history=None):
-        stream_msg: StreamingAgentChatResponse = self.engine.stream_chat(
-            message, chat_history
-        )
+        stream_msg: StreamingAgentChatResponse = self.engine.stream_chat(message, chat_history)
         for msg in stream_msg.response_gen:
             if msg is None:
                 break

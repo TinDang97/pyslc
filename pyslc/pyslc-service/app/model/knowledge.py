@@ -11,13 +11,11 @@ if TYPE_CHECKING:
 
 
 class Knowledge(ModelBase, TimestampMixin, UserMixin):
+    __tablename__ = "knowledge"
+
     content: Mapped[str] = mapped_column(String, nullable=False)
-    collection_id: Mapped[UUID] = mapped_column(
-        ForeignKey("collection.id"), nullable=False
-    )
-    collection: Mapped["Collection"] = relationship(
-        "Collection", back_populates="knowledge_parts"
-    )
+    collection_id: Mapped[UUID] = mapped_column(ForeignKey("collection.uid"), nullable=False)
+    collection: Mapped["Collection"] = relationship("Collection", back_populates="knowledge_parts")
 
     def __repr__(self):
         return f"<Knowledge(content={self.content}, metadata={self.metadata}, collection_id={self.collection_id})>"

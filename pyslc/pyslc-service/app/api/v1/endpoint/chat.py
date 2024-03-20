@@ -17,9 +17,7 @@ router = APIRouter(tags=["chat"])
 TEST = "test"
 
 
-@router.post(
-    "/agent", response_model=AgentChatResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("/agent", response_model=AgentChatResponse, status_code=status.HTTP_201_CREATED)
 @inject
 def create_agent_chat(
     payload: AgentChatCreatePayload,
@@ -31,9 +29,7 @@ def create_agent_chat(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post(
-    "/", response_model=ChatResponsePayload, status_code=status.HTTP_201_CREATED
-)
+@router.post("/", response_model=ChatResponsePayload, status_code=status.HTTP_201_CREATED)
 @inject
 def create_chat(
     payload: ChatCreatePayload,

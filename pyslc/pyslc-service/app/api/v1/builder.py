@@ -76,20 +76,9 @@ class AppBuilder:
         from app.api.v1.endpoint.knowledge import router as knowledge_router
 
         self.app.include_router(chat_router, prefix="/chat", tags=["chat"])
-        self.app.include_router(
-            collection_router, prefix="/collection", tags=["collection"]
-        )
-        self.app.include_router(
-            knowledge_router, prefix="/knowledge", tags=["knowledge"]
-        )
+        self.app.include_router(collection_router, prefix="/collection", tags=["collection"])
+        self.app.include_router(knowledge_router, prefix="/knowledge", tags=["knowledge"])
         return self
 
     def build(self) -> FastAPI:
-        return (
-            self.add_startup_event()
-            .add_shutdown_event()
-            .add_root()
-            .add_middleware()
-            .add_router()
-            .app
-        )
+        return self.add_startup_event().add_shutdown_event().add_root().add_middleware().add_router().app

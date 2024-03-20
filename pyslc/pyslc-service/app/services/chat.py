@@ -72,9 +72,7 @@ class ChatService:
         if not collection:
             raise ValueError("Collection not found")
 
-        knowledges = self.knowledge_repository.get_knowledge_by_collection(
-            collection_id=collection_id
-        )
+        knowledges = self.knowledge_repository.get_knowledge_by_collection(collection_id=collection_id)
         llm_engine = self.llm_service.get_engine(engine_id)
         llm_engine.refresh_index(knowledges.raw())
 
@@ -90,18 +88,14 @@ class ChatService:
         if not collection:
             raise ValueError("Collection not found")
 
-        knowledges = self.knowledge_repository.get_knowledge_by_collection(
-            collection_id=collection_uid
-        )
+        knowledges = self.knowledge_repository.get_knowledge_by_collection(collection_id=collection_uid)
         return self.llm_service.__call__(
             engine_uid=self.get_engine_id(collection_uid, user_id),
             collection_uid=collection_uid,
             docs=knowledges.raw(),
         )
 
-    def create_chat_agent(
-        self, payload: AgentChatCreatePayload, user_id: str
-    ) -> AgentChatResponse:
+    def create_chat_agent(self, payload: AgentChatCreatePayload, user_id: str) -> AgentChatResponse:
         llm_engine = self.get_engine(payload.collection_id, user_id)
         session_id = self.create_chat_session()
         self.agent_service(session_id, llm_engine.agent())

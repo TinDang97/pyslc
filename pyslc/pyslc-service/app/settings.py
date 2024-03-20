@@ -1,20 +1,7 @@
 import os
 
+from pydantic import Field, field_validator, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-
-# class postgres config
-class PostgresConfig(BaseSettings):
-    host: str = "localhost"
-    port: int = 5432
-    name: str = "pyslc"
-    user: str = "pyslc"
-    password: str = "pyslc"
-    schema: str = "pyslc"
-
-    @property
-    def db_url(self) -> str:
-        return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
 
 
 # class model config
@@ -46,7 +33,13 @@ class Settings(BaseSettings):
     log_date_format: str = "%Y-%m-%d %H:%M:%S"
 
     # settings of the pyslc postgres database connection
-    db: PostgresConfig = PostgresConfig()
+    db: PostgresDsn = Field("postgresql://postgres:postgres@localhost:5432/pyslc")
+
+    @field_validator("db")  # noqa
+    @classmethod
+    def check_db_name(cls, v):
+        assert v.path and len(v.path) > 1, "database must be provided"
+        return v
 
     # settings of the pyslc openai api
     openai_api_key: str = ""

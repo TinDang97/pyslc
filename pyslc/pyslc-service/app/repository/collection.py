@@ -19,25 +19,17 @@ class CollectionRepository(BaseRepository[Collection]):
 
     def get_collections(self, limit: int = 10, offset: int = 0) -> List[Collection]:
         with self.session_factory() as session:
-            smt = (
-                select(Collection)
-                .options(joinedload(Collection.knowledge_parts))
-                .limit(limit)
-                .offset(offset)
-            )
+            smt = select(Collection).options(joinedload(Collection.knowledge_parts)).limit(limit).offset(offset)
             collections = session.execute(smt).scalars().all()
             return list(collections)
 
     def get_collection_by_id(self, uid: str | UUID) -> Collection | None:
         return self.get(uid)
 
-    def create_collection(
-        self, payload: Dict, created_by: str, knowledges: List[Dict] | None = None
-    ) -> Collection:
+    def create_collection(self, payload: Dict, created_by: str, knowledges: List[Dict] | None = None) -> Collection:
         if knowledges:
             payload[Collection.knowledge_parts.key] = [
-                map_dict_to_entity(Knowledge, **knowledge, created_by=created_by)
-                for knowledge in knowledges
+                map_dict_to_entity(Knowledge, **knowledge, created_by=created_by) for knowledge in knowledges
             ]
         return self.create(payload=payload, created_by=created_by)
 
