@@ -1,5 +1,7 @@
+from typing import List
 from uuid import UUID
 
+from app.schema.query import ListResponse
 from pydantic import BaseModel, field_validator, Field
 
 from app.core.util import split_string
@@ -36,3 +38,13 @@ class ChatCreatePayload(ChatBase):
 class ChatResponsePayload(BaseModel):
     message: str
     session_id: UUID
+
+
+class ChatInfoResponsePayload(BaseModel):
+    chat_uid: UUID
+    description: str
+    title: str
+
+
+class ChatListResponsePayload(ListResponse[ChatInfoResponsePayload]):
+    items: List[ChatInfoResponsePayload]

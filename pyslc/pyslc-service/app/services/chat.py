@@ -8,8 +8,10 @@ from app.schema.chat import (
     AgentChatResponse,
     ChatCreatePayload,
     ChatResponsePayload,
+    ChatListResponsePayload
 )
 from app.schema.collection import CollectionResponse
+from app.schema.query import QueryParams
 
 if TYPE_CHECKING:
     from app.services.collection import CollectionService
@@ -47,6 +49,13 @@ class ChatService:
     ):
         engine_id = f"{collection_id}_{user_id}"
         return engine_id
+
+    def get_chats_by_user(self, user_id: UIDType, query: QueryParams):
+        chats = self.chat_repository.get_by_user_id(
+            user_id,
+            query,
+        )
+        return ChatListResponsePayload.model_validate(chats, from_attributes=True)
 
     def chat(self, payload: ChatCreatePayload) -> ChatResponsePayload:
         chat_agent = self.agent_service.get_agent(payload.session_id)

@@ -3,6 +3,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.responses import StreamingResponse
 
 from app.core.container import Container
+from app.schema.query import QueryParams
 from dependency_injector.wiring import Provide, inject
 
 from app.schema.chat import (
@@ -15,6 +16,15 @@ from app.services.chat import ChatService
 
 router = APIRouter(tags=["chat"])
 TEST = "test"
+
+
+@router.get("/", response_model=ChatResponsePayload, status_code=status.HTTP_200_OK)
+@inject
+def get_chats(
+    service: ChatService = Depends(Provide[Container.chat_service]),
+    query: QueryParams = Depends(QueryParams),
+) -> ChatResponsePayload:
+    return service.get_chats_by_user(TEST, query)
 
 
 @router.post("/agent", response_model=AgentChatResponse, status_code=status.HTTP_201_CREATED)

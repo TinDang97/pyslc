@@ -12,6 +12,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         env_file=".env",
     )
+
     # Settings for the FastAPI application
     app_name: str = "pyslc-service"
     app_description: str = "A simple REST API for the pyslc library."

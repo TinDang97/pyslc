@@ -33,6 +33,7 @@ class AppBuilder:
                 title=settings.app_name,
                 description=settings.app_description,
                 version=settings.app_version,
+                redirect_slashes=True,
             )
 
     def add_event(self, event: str, handler):

@@ -84,7 +84,14 @@ class BaseRepository(ReadBaseRepository[T], WriteBaseRepository):
             smt = select(self.entity).filter_by(id=uid, **filter_criteria)
             return session.execute(smt).scalar_one_or_none()
 
-    def find_all(self, limit: int = 10, offset: int = 0, **filter_criteria) -> Sequence[T]:
+    def find_all(
+            self,
+            limit: int = 10,
+            offset: int = 0,
+            order_by: str = "id",
+            desc: bool = False,
+            **filter_criteria
+    ) -> Sequence[T]:
         """
         Get all entities.
 
