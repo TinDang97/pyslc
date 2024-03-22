@@ -31,11 +31,15 @@ class ChatRepository(BaseRepository[Chat]):
         :return: chat
         """
         with self.session_factory() as session:
-            chat = select(Chat).filter(Chat.session_id == session_id, Chat.is_deleted.__eq__(False))
+            chat = select(Chat).filter(
+                Chat.session_id == session_id, Chat.is_deleted.__eq__(False)
+            )
             Chat.is_deleted.__eq__(False)
         return session.execute(chat).scalar_one_or_none()
 
-    def get_by_collection_id(self, collection_id: UIDType, query: QueryParams) -> ChatListResponsePayload:
+    def get_by_collection_id(
+        self, collection_id: UIDType, query: QueryParams
+    ) -> ChatListResponsePayload:
         """
         Get a single chat by its collection ID.
 
@@ -44,7 +48,9 @@ class ChatRepository(BaseRepository[Chat]):
         :return: chats
         """
         with self.session_factory() as session:
-            smt = select(Chat).filter(Chat.collection_id == collection_id, Chat.is_deleted.__eq__(False))
+            smt = select(Chat).filter(
+                Chat.collection_id == collection_id, Chat.is_deleted.__eq__(False)
+            )
             page: ListResponse[Chat] = paginate(smt, query, session)
             return ChatListResponsePayload.model_validate(page, from_attributes=True)
 
@@ -56,8 +62,7 @@ class ChatRepository(BaseRepository[Chat]):
         """
         with self.session_factory() as session:
             smt = select(Chat).filter(
-                Chat.created_by == user_id,
-                Chat.is_deleted.__eq__(False)
+                Chat.created_by == user_id, Chat.is_deleted.__eq__(False)
             )
             page: ListResponse[Chat] = paginate(smt, query, session)
             return ChatListResponsePayload.model_validate(page, from_attributes=True)

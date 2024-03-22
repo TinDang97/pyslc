@@ -45,7 +45,9 @@ class ZepLLMEngine(LLMEngine):
             collection_name = collection_name.hex[:COL_LIMIT_RANGE]
 
         if collection_name.__len__() > COL_LIMIT_RANGE:
-            warn(f"Collection name is too long, will be truncated to {COL_LIMIT_RANGE} characters")
+            warn(
+                f"Collection name is too long, will be truncated to {COL_LIMIT_RANGE} characters"
+            )
         collection_name = hash_string(collection_name)[:COL_LIMIT_RANGE]
 
         self.vector_store = ZepVectorStore(
@@ -76,7 +78,9 @@ class ZepLLMEngine(LLMEngine):
             api_key=openai_api_key,
             embed_batch_size=16,
         )
-        self.service_context = ServiceContext.from_defaults(embed_model=self.embed_model)
+        self.service_context = ServiceContext.from_defaults(
+            embed_model=self.embed_model
+        )
 
         self.index: VectorStoreIndex = VectorStoreIndex.from_documents(
             documents=data,
@@ -160,7 +164,9 @@ class ZepLLMService(LLMService[ZepLLMEngine]):
         )
         return engine
 
-    def __call__(self, engine_uid: UIDType, collection_uid: UIDType, docs: DocParam) -> ZepLLMEngine:
+    def __call__(
+        self, engine_uid: UIDType, collection_uid: UIDType, docs: DocParam
+    ) -> ZepLLMEngine:
         if collection_uid not in self.storage:
             engine = self.init_llm_engine(collection_uid, docs)
             self.add_engine(engine_uid, engine)

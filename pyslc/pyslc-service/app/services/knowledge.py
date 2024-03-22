@@ -26,18 +26,26 @@ class KnowledgeService(ServiceBase):
         self.knowledge_repository = knowledge_repository
         self.collection_repository = collection_repository
 
-    def create_knowledge_base(self, payload: KnowledgeBaseCreatePayload, created_by: str) -> KnowledgeBaseResponse:
+    def create_knowledge_base(
+        self, payload: KnowledgeBaseCreatePayload, created_by: str
+    ) -> KnowledgeBaseResponse:
         if not self.collection_repository.is_exists(uid=payload.collection_uid):
             raise ValueError("Collection does not exist")
-        knowledge = self.knowledge_repository.create_knowledge(payload=payload.model_dump(), created_by=created_by)
+        knowledge = self.knowledge_repository.create_knowledge(
+            payload=payload.model_dump(), created_by=created_by
+        )
         return KnowledgeBaseResponse.model_validate(knowledge, from_attributes=True)
 
     def get_knowledge(self, uid: UIDType) -> KnowledgeBaseResponse:
         knowledge = self.knowledge_repository.get(uid)
         return KnowledgeBaseResponse.model_validate(knowledge, from_attributes=True)
 
-    def get_knowledges(self, limit: int = 10, offset: int = 0) -> List[KnowledgeBaseResponse]:
-        knowledge_parts = self.knowledge_repository.get_knowledges(limit=limit, offset=offset)
+    def get_knowledges(
+        self, limit: int = 10, offset: int = 0
+    ) -> List[KnowledgeBaseResponse]:
+        knowledge_parts = self.knowledge_repository.get_knowledges(
+            limit=limit, offset=offset
+        )
         return list(
             map(
                 lambda x: KnowledgeBaseResponse.model_validate(x, from_attributes=True),
@@ -60,8 +68,12 @@ class KnowledgeService(ServiceBase):
             from_attributes=True,
         )
 
-    def update_knowledge_base(self, uid: UIDType, payload: KnowledgeBaseUpdatePayload, updated_by: str):
-        self.knowledge_repository.update(payload=payload.model_dump(), updated_by=updated_by, uid=uid)
+    def update_knowledge_base(
+        self, uid: UIDType, payload: KnowledgeBaseUpdatePayload, updated_by: str
+    ):
+        self.knowledge_repository.update(
+            payload=payload.model_dump(), updated_by=updated_by, uid=uid
+        )
 
     def delete_knowledge_base(self, uid: UIDType, deleted_by: str) -> None:
         self.knowledge_repository.delete(uid=uid, deleted_by=deleted_by)
@@ -75,7 +87,9 @@ class KnowledgeService(ServiceBase):
     def create(self, payload: KnowledgeBaseCreatePayload, created_by: str):
         return self.create_knowledge_base(payload, created_by)
 
-    def update(self, uid: UIDType, payload: KnowledgeBaseUpdatePayload, updated_by: str):
+    def update(
+        self, uid: UIDType, payload: KnowledgeBaseUpdatePayload, updated_by: str
+    ):
         return self.update_knowledge_base(uid, payload, updated_by)
 
     def delete(self, uid: UIDType, deleted_by: str):

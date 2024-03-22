@@ -20,7 +20,9 @@ class Document(ModelBase, TimestampMixin, UserMixin):
     file_hash: Mapped[str] = mapped_column(String, nullable=False)
 
     collection_id = mapped_column(ForeignKey("collection.uid"), nullable=False)
-    collection: Mapped["Collection"] = relationship(back_populates="documents", uselist=False)
+    collection: Mapped["Collection"] = relationship(
+        back_populates="documents", uselist=False
+    )
 
     def __repr__(self):
         return f"<Document(name={self.name}, file_name={self.file_name}, file_hash={self.file_hash})>"

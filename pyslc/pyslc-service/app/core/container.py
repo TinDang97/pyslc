@@ -26,15 +26,16 @@ class Container(containers.DeclarativeContainer):
 
     # config
     wiring_config = containers.WiringConfiguration(
-        modules=["app.api.v1.endpoint"],
-    )
-
-    config = providers.Configuration(
-        pydantic_settings=[settings],
+        modules=[
+            "app.api.v1.deps",
+            "app.api.v1.endpoint.chat",
+            "app.api.v1.endpoint.collection",
+            "app.api.v1.endpoint.knowledge",
+        ]
     )
 
     # database
-    database = providers.Singleton(Database, config=config.db_url)
+    database = providers.Singleton(Database, db_url=settings.db.uri, logger=logger)
 
     # repositories
     chat_repository = providers.Factory(

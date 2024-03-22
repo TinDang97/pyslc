@@ -1,7 +1,37 @@
 import os
+from typing import Optional
 
-from pydantic import Field, field_validator, PostgresDsn
+from pydantic import BaseModel, Field, field_validator, PostgresDsn
+from pydantic_core.core_schema import ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class DatabaseSettings(BaseModel):
+    host: str = "localhost"
+    port: int = 5432
+    user: str = "postgres"
+    password: str = "postgres"
+    database: str = "pyslc"
+    schema_: str = Field("pyslc", alias="schema")
+
+    uri: Optional[str] = None
+
+    @field_validator("uri", mode="before")
+    @classmethod
+    def validate_uri(cls, field_value: Optional[str], values: ValidationInfo):
+        if field_value:
+            return field_value
+
+        field_value_: PostgresDsn = PostgresDsn.build(
+            scheme="postgresql",
+            username=values.data.get("user"),
+            password=values.data.get("password"),
+            host=values.data.get("host"),
+            port=values.data.get("port"),
+            path=f"/{values.data.get('database')}",
+        )
+        assert field_value_.path and len(field_value_.path) > 1, "database must be provided"
+        return field_value_.unicode_string()
 
 
 # class model config
@@ -33,14 +63,8 @@ class Settings(BaseSettings):
     log_format: str = "%(asctime)s %(levelname)s %(message)s"
     log_date_format: str = "%Y-%m-%d %H:%M:%S"
 
-    # settings of the pyslc postgres database connection
-    db: PostgresDsn = Field("postgresql://postgres:postgres@localhost:5432/pyslc")
-
-    @field_validator("db")  # noqa
-    @classmethod
-    def check_db_name(cls, v):
-        assert v.path and len(v.path) > 1, "database must be provided"
-        return v
+    # settings of the pyslc postgres database connection with schema
+    db: DatabaseSettings = DatabaseSettings(schema="public")
 
     # settings of the pyslc openai api
     openai_api_key: str = ""

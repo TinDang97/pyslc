@@ -37,7 +37,9 @@ class CollectionService(ServiceBase):
             )
         )
 
-    def create(self, payload: CollectionCreatePayload, created_by: str) -> CollectionResponse:
+    def create(
+        self, payload: CollectionCreatePayload, created_by: str
+    ) -> CollectionResponse:
         if self.collection_repository.get_collection_by_name(payload.name):
             raise ValueError("Collection already exists")
 
@@ -60,14 +62,18 @@ class CollectionService(ServiceBase):
             description=collection.description,
         )
 
-    def update(self, uid: str | UUID, payload: UpdateCollectionPayload, updated_by: str) -> CollectionResponse:
+    def update(
+        self, uid: str | UUID, payload: UpdateCollectionPayload, updated_by: str
+    ) -> CollectionResponse:
         collection = self.collection_repository.update_collection(
             uid, payload=payload.model_dump(), updated_by=updated_by
         )
         if not collection:
             raise ValueError("Collection not found")
 
-        return CollectionResponse(uid=collection.uid, name=collection.name, description=collection.description)
+        return CollectionResponse(
+            uid=collection.uid, name=collection.name, description=collection.description
+        )
 
     def delete(self, uid: str | UUID, deleted_by: str):
         return self.collection_repository.delete_collection(uid, deleted_by)
@@ -77,14 +83,18 @@ class CollectionService(ServiceBase):
         if not collection:
             raise ValueError("Collection not found")
 
-        return CollectionResponse(uid=collection.uid, name=collection.name, description=collection.description)
+        return CollectionResponse(
+            uid=collection.uid, name=collection.name, description=collection.description
+        )
 
     def get_by_name(self, name: str) -> CollectionResponse:
         collection = self.collection_repository.get_collection_by_name(name)
         if not collection:
             raise ValueError("Collection not found")
 
-        return CollectionResponse(uid=collection.uid, name=collection.name, description=collection.description)
+        return CollectionResponse(
+            uid=collection.uid, name=collection.name, description=collection.description
+        )
 
     def get_knowledge_by_collection(
         self, collection_name: str, limit: int = 10, offset: int = 0

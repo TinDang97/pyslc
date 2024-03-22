@@ -10,6 +10,7 @@ from app.schema.chat import (
     AgentChatCreatePayload,
     AgentChatResponse,
     ChatCreatePayload,
+    ChatListResponsePayload,
     ChatResponsePayload,
 )
 from app.services.chat import ChatService
@@ -18,16 +19,18 @@ router = APIRouter(tags=["chat"])
 TEST = "test"
 
 
-@router.get("/", response_model=ChatResponsePayload, status_code=status.HTTP_200_OK)
+@router.get("/", response_model=ChatListResponsePayload, status_code=status.HTTP_200_OK)
 @inject
 def get_chats(
     service: ChatService = Depends(Provide[Container.chat_service]),
     query: QueryParams = Depends(QueryParams),
-) -> ChatResponsePayload:
+) -> ChatListResponsePayload:
     return service.get_chats_by_user(TEST, query)
 
 
-@router.post("/agent", response_model=AgentChatResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/agent", response_model=AgentChatResponse, status_code=status.HTTP_201_CREATED
+)
 @inject
 def create_agent_chat(
     payload: AgentChatCreatePayload,
@@ -39,7 +42,9 @@ def create_agent_chat(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/", response_model=ChatResponsePayload, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/", response_model=ChatResponsePayload, status_code=status.HTTP_201_CREATED
+)
 @inject
 def create_chat(
     payload: ChatCreatePayload,

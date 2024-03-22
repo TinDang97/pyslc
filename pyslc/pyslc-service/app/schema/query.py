@@ -24,7 +24,7 @@ class QueryParams(BaseModel):
     def limit(self) -> int:
         return self.page_size
 
-    @computed_field   # type: ignore[misc]
+    @computed_field  # type: ignore[misc]
     @property
     def offset(self) -> int:
         return (self.page - 1) * self.page_size

@@ -23,13 +23,17 @@ constraint_naming_conventions = {
 
 class Base(DeclarativeBase):
     __abstract__ = True
-    __table_args__ = {"schema": settings.db.scheme} if settings.db.scheme else None
-    metadata = MetaData(schema=settings.db.scheme, naming_convention=constraint_naming_conventions)
+    __table_args__ = {"schema": settings.db.schema_} if settings.db.schema_ else None
+    metadata = MetaData(
+        schema=settings.db.schema_, naming_convention=constraint_naming_conventions
+    )
 
 
 class Database:
     def __init__(self, db_url: str, *, schema: str = "public", logger: Logger):
-        self._engine = create_engine(db_url, json_serializer=json_serializer, json_deserializer=json_deserializer)
+        self._engine = create_engine(
+            db_url, json_serializer=json_serializer, json_deserializer=json_deserializer
+        )
         self._session_factory = sessionmaker(
             autocommit=False,
             autoflush=False,

@@ -14,14 +14,18 @@ class Message(ModelBase, TimestampMixin, UserMixin):
 
     content: Mapped[str] = mapped_column(String, nullable=False)
 
-    previous_message_id: Mapped[str] = mapped_column(ForeignKey("message.uid"), nullable=True)
+    previous_message_id: Mapped[str] = mapped_column(
+        ForeignKey("message.uid"), nullable=True
+    )
     previous_message: Mapped["Message"] = relationship(
         uselist=False,
         foreign_keys=[previous_message_id],
         remote_side=[previous_message_id],
     )
 
-    next_message_id: Mapped[str] = mapped_column(ForeignKey("message.uid"), nullable=True)
+    next_message_id: Mapped[str] = mapped_column(
+        ForeignKey("message.uid"), nullable=True
+    )
     next_message: Mapped["Message"] = relationship(
         uselist=False,
         foreign_keys=[next_message_id],
@@ -47,7 +51,9 @@ class Chat(ModelBase, TimestampMixin, UserMixin):
     messages: Mapped[List[Message]] = relationship(back_populates="chat")
 
     collection_id = mapped_column(ForeignKey("collection.uid"), nullable=False)
-    collection: Mapped["Collection"] = relationship("Collection", back_populates="chats")
+    collection: Mapped["Collection"] = relationship(
+        "Collection", back_populates="chats"
+    )
     session_id: Mapped[str] = mapped_column(String, nullable=False)
 
     def __repr__(self):

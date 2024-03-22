@@ -1,11 +1,23 @@
+import logging
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
+from sqlalchemy import engine_from_config, text
 from sqlalchemy import pool
+from sqlalchemy.sql.schema import SchemaItem
+
 from app import model
 
 from alembic import context
-import alembic_postgresql_enum  # noqa: F401
+
+try:
+    import alembic_postgresql_enum
+except ImportError:
+    alembic_postgresql_enum = None
+
+from app.settings import settings
+
+# logger
+logger: logging.Logger = logging.getLogger(f"alembic.{__name__}")
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -22,6 +34,21 @@ if config.config_file_name is not None:
 # target_metadata = mymodel.Base.metadata
 
 target_metadata = model.Base.metadata
+
+
+# verify the schema of objects
+def include_object(obj: SchemaItem, __, type_: str, *_):
+    if type_ == "table" and getattr(obj, "schema") != settings.db.schema_:
+        return False
+    return True
+
+
+def include_name(name, type_, _):
+    if type_ == "schema":
+        # note this will not include the default schema
+        return name in [settings.db.schema_]
+    else:
+        return True
 
 
 # other values from the config, defined by the needs of env.py,
@@ -42,12 +69,14 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url,
+        url=settings.db.uri,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_name=include_name,
+        include_schemas=True,
+        include_object=include_object,
     )
 
     with context.begin_transaction():
@@ -65,10 +94,23 @@ def run_migrations_online() -> None:
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        url=settings.db.uri,
     )
+    logger.info(f"Connecting to database: {settings.db.uri}")
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        connection.execute(text('set search_path to "%s"' % settings.db.schema_))
+
+        # create schema if not exists
+        connection.execute(text(f"CREATE SCHEMA IF NOT EXISTS {settings.db.schema_}"))
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            version_table_schema=settings.db.schema_,
+            include_name=include_name,
+            include_schemas=True,
+            include_object=include_object,
+        )
 
         with context.begin_transaction():
             context.run_migrations()

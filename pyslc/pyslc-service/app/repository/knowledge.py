@@ -32,8 +32,15 @@ class KnowledgeRepository(BaseRepository[Knowledge]):
     def delete_knowledge(self, uid: UIDType, deleted_by: str) -> None:
         self.delete(uid=uid, deleted_by=deleted_by)
 
-    def get_knowledge_by_collection(self, collection_id: UIDType, limit: int = 10, offset: int = 0) -> Knowledges:
+    def get_knowledge_by_collection(
+        self, collection_id: UIDType, limit: int = 10, offset: int = 0
+    ) -> Knowledges:
         with self.session_factory() as session:
-            statement = select(Knowledge).filter(Knowledge.collection_id == collection_id).limit(limit).offset(offset)
+            statement = (
+                select(Knowledge)
+                .filter(Knowledge.collection_id == collection_id)
+                .limit(limit)
+                .offset(offset)
+            )
             knowledges = session.execute(statement).scalars().all()
             return Knowledges(knowledges)
