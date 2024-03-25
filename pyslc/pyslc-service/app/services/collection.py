@@ -76,6 +76,9 @@ class CollectionService(ServiceBase):
         )
 
     def delete(self, uid: str | UUID, deleted_by: str):
+        if not self.collection_repository.get_collection_by_id(uid):
+            raise ValueError("Collection not found")
+
         return self.collection_repository.delete_collection(uid, deleted_by)
 
     def get(self, uid: str | UUID) -> CollectionResponse:

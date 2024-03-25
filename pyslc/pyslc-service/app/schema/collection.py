@@ -43,4 +43,4 @@ class CollectionCreatePayload(CollectionBase):
 
 class CollectionCreateResponse(CollectionBase):
     uid: UIDType
-    doc_added_count: int
+    knowledge_content: List[KnowledgeBaseResponse]

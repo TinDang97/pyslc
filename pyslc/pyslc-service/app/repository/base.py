@@ -26,7 +26,7 @@ class ReadBaseRepository(Protocol[R]):
         ...
 
     def find_all(
-        self, limit: int = 10, offset: int = 0, **filter_criteria
+            self, limit: int = 10, offset: int = 0, **filter_criteria
     ) -> Sequence[R]:
         ...
 
@@ -42,11 +42,11 @@ class WriteBaseRepository(Protocol):
         ...
 
     def update(
-        self,
-        uid: UIDType,
-        payload: MutableMapping,
-        updated_by: str,
-        **filter_criteria,
+            self,
+            uid: UIDType,
+            payload: MutableMapping,
+            updated_by: str,
+            **filter_criteria,
     ):
         ...
 
@@ -63,7 +63,7 @@ class BaseRepository(ReadBaseRepository[T], WriteBaseRepository):
     """
 
     def __init__(
-        self, entity: Type[T], session_factory: Callable[[], Session], logger: Logger
+            self, entity: Type[T], session_factory: Callable[[], Session], logger: Logger
     ):
         self.entity = entity
         self.session_factory = session_factory
@@ -71,7 +71,11 @@ class BaseRepository(ReadBaseRepository[T], WriteBaseRepository):
 
     def is_exists(self, uid: UIDType, **filter_criteria) -> bool:
         with self.session_factory() as session:
-            q = session.query(self.entity).filter_by(id=uid, **filter_criteria).exists()
+            q = session.query(self.entity).filter_by(
+                uid=uid,
+                is_deleted=False,
+                **filter_criteria
+            ).exists()
             return session.query(literal(True)).filter(q).scalar()
 
     def get(self, uid: UIDType, **filter_criteria) -> T | None:
@@ -85,16 +89,20 @@ class BaseRepository(ReadBaseRepository[T], WriteBaseRepository):
         - The entity with the specified ID, if found. Otherwise, returns None.
         """
         with self.session_factory() as session:
-            smt = select(self.entity).filter_by(id=uid, **filter_criteria)
+            smt = select(self.entity).filter_by(
+                uid=uid,
+                is_deleted=False,
+                **filter_criteria
+            )
             return session.execute(smt).scalar_one_or_none()
 
     def find_all(
-        self,
-        limit: int = 10,
-        offset: int = 0,
-        order_by: str = "id",
-        desc: bool = False,
-        **filter_criteria,
+            self,
+            limit: int = 10,
+            offset: int = 0,
+            order_by: str = "id",
+            desc: bool = False,
+            **filter_criteria,
     ) -> Sequence[T]:
         """
         Get all entities.
@@ -104,7 +112,10 @@ class BaseRepository(ReadBaseRepository[T], WriteBaseRepository):
         with self.session_factory() as session:
             smt = (
                 select(self.entity)
-                .filter_by(**filter_criteria)
+                .filter_by(
+                    **filter_criteria,
+                    is_deleted=False,
+                )
                 .limit(limit)
                 .offset(offset)
             )
@@ -125,11 +136,11 @@ class BaseRepository(ReadBaseRepository[T], WriteBaseRepository):
             return entity
 
     def update(
-        self,
-        uid: UIDType,
-        payload: MutableMapping,
-        updated_by: str,
-        **filter_criteria,
+            self,
+            uid: UIDType,
+            payload: MutableMapping,
+            updated_by: str,
+            **filter_criteria,
     ):
         """
         Update an entity.
@@ -137,7 +148,11 @@ class BaseRepository(ReadBaseRepository[T], WriteBaseRepository):
         with self.session_factory() as session:
             update_exec = (
                 update(self.entity)
-                .filter_by(uid=uid, **filter_criteria)
+                .filter_by(
+                    uid=uid,
+                    is_deleted=False,
+                    **filter_criteria
+                )
                 .values(**payload, updated_by=updated_by)
             )
             session.execute(update_exec)
@@ -150,7 +165,11 @@ class BaseRepository(ReadBaseRepository[T], WriteBaseRepository):
         with self.session_factory() as session:
             delete_exec = (
                 update(self.entity)
-                .filter_by(id=uid, **filter_criteria)
+                .filter_by(
+                    uid=uid,
+                    is_deleted=False,
+                    **filter_criteria
+                )
                 .values(deleted_by=deleted_by, is_deleted=True)
             )
             session.execute(delete_exec)
@@ -163,7 +182,10 @@ class BaseRepository(ReadBaseRepository[T], WriteBaseRepository):
         with self.session_factory() as session:
             delete_exec = (
                 update(self.entity)
-                .filter_by(**filter_criteria)
+                .filter_by(
+                    is_deleted=False,
+                    **filter_criteria
+                )
                 .values(deleted_by=deleted_by, is_deleted=True)
             )
             session.execute(delete_exec)

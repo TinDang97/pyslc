@@ -8,7 +8,7 @@ dev:
 	poetry run uvicorn app.api.v1.app:app --host 0.0.0.0 --port 8888 --reload
 
 start:
-	docker compose -f docker-compose.yaml up --build
+	docker compose -f docker-compose.yaml up --build db
 
 detach:
 	docker compose -f docker-compose.yaml up -d --build
@@ -23,3 +23,6 @@ docker-release: ## Release the container with tag latest and version
 	# Push the docker images
 	docker push $(DOCKER_REGISTRY)$(BINARY_NAME):latest
 	docker push $(DOCKER_REGISTRY)$(BINARY_NAME):$(VERSION)
+
+clean: ## Clean up the docker containers
+	docker compose -f docker-compose.yaml down --volumes --remove-orphans

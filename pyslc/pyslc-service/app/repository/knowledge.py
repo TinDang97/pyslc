@@ -38,7 +38,7 @@ class KnowledgeRepository(BaseRepository[Knowledge]):
         with self.session_factory() as session:
             statement = (
                 select(Knowledge)
-                .filter(Knowledge.collection_id == collection_id)
+                .filter(Knowledge.collection_uid == collection_id)
                 .limit(limit)
                 .offset(offset)
             )

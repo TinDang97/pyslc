@@ -14,7 +14,7 @@ class Knowledge(ModelBase, TimestampMixin, UserMixin):
     __tablename__ = "knowledge"
 
     content: Mapped[str] = mapped_column(String, nullable=False)
-    collection_id: Mapped[UUID] = mapped_column(
+    collection_uid: Mapped[UUID] = mapped_column(
         ForeignKey("collection.uid"), nullable=False
     )
     collection: Mapped["Collection"] = relationship(

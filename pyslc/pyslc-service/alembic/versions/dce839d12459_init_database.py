@@ -2,7 +2,7 @@
 
 Revision ID: dce839d12459
 Revises:
-Create Date: 2024-03-22 16:56:37.641852
+Create Date: 2024-03-26 00:56:04.350085
 
 """
 from typing import Sequence, Union
@@ -123,7 +123,7 @@ def upgrade() -> None:
     op.create_table(
         "knowledge",
         sa.Column("content", sa.String(), nullable=False),
-        sa.Column("collection_id", sa.UUID(), nullable=False),
+        sa.Column("collection_uid", sa.UUID(), nullable=False),
         sa.Column("uid", sa.UUID(), nullable=False),
         sa.Column("is_deleted", sa.Boolean(), nullable=False),
         sa.Column(
@@ -143,9 +143,9 @@ def upgrade() -> None:
         sa.Column("updated_by", sa.String(), nullable=True),
         sa.Column("deleted_by", sa.String(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["collection_id"],
+            ["collection_uid"],
             ["pyslc.collection.uid"],
-            name=op.f("fk_knowledge_collection_id_collection"),
+            name=op.f("fk_knowledge_collection_uid_collection"),
         ),
         sa.PrimaryKeyConstraint("uid", name=op.f("pk_knowledge")),
         schema="pyslc",

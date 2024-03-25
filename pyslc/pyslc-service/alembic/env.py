@@ -38,12 +38,14 @@ target_metadata = model.Base.metadata
 
 # verify the schema of objects
 def include_object(obj: SchemaItem, __, type_: str, *_):
+    logger.debug(f"Include object: {obj}, type: {type_}")
     if type_ == "table" and getattr(obj, "schema") != settings.db.schema_:
         return False
     return True
 
 
 def include_name(name, type_, _):
+    logger.debug(f"Include name: {name}, type: {type_}")
     if type_ == "schema":
         # note this will not include the default schema
         return name in [settings.db.schema_]
@@ -103,6 +105,9 @@ def run_migrations_online() -> None:
 
         # create schema if not exists
         connection.execute(text(f"CREATE SCHEMA IF NOT EXISTS {settings.db.schema_}"))
+        connection.commit()
+        logger.info("Schema created")
+
         context.configure(
             connection=connection,
             target_metadata=target_metadata,

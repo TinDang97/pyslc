@@ -30,7 +30,9 @@ class DatabaseSettings(BaseModel):
             port=values.data.get("port"),
             path=f"/{values.data.get('database')}",
         )
-        assert field_value_.path and len(field_value_.path) > 1, "database must be provided"
+        assert (
+            field_value_.path and len(field_value_.path) > 1
+        ), "database must be provided"
         return field_value_.unicode_string()
 
 

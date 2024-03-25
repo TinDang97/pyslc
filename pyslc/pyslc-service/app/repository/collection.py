@@ -49,6 +49,9 @@ class CollectionRepository(BaseRepository[Collection]):
 
     def get_collection_by_name(self, name: str) -> Collection | None:
         with self.session_factory() as session:
-            smt = select(Collection).filter(Collection.name == name)
+            smt = select(Collection).filter(
+                Collection.name == name,
+                Collection.is_deleted.__eq__(False),
+            )
             collection = session.execute(smt).scalar_one_or_none()
             return collection

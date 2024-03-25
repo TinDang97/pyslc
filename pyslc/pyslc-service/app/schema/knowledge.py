@@ -9,19 +9,18 @@ from app.core.types import UIDType
 
 class _Base(BaseModel):
     content: str
-    collection_uid: UIDType
 
 
 class KnowledgeBasePayload(_Base):
-    pass
+    uid: UIDType
 
 
 class KnowledgeBaseCreatePayload(_Base):
-    pass
+    collection_uid: UIDType
 
 
 class KnowledgeBaseResponse(_Base):
-    uid: UIDType
+    collection_uid: UIDType
     content: str
 
 

@@ -1,9 +1,8 @@
 # Created by tindang at 04/02/2024
-from typing import Generic, List, Optional, TypeVar
+from typing import Generic, Iterator, List, Optional, TypeVar, Annotated
 
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel, computed_field, Field
 from enum import Enum
-
 
 T = TypeVar("T")
 
@@ -14,8 +13,8 @@ class ListOrderOptions(str, Enum):
 
 
 class QueryParams(BaseModel):
-    page: int = 1
-    page_size: int = 10
+    page: Annotated[int, Field(ge=1)] = 1
+    page_size: Annotated[int, Field()] = 10
     order: ListOrderOptions = ListOrderOptions.desc
     order_by: str = "updated_at"
 
@@ -50,13 +49,23 @@ class ListResponse(BaseModel, Generic[T]):
 
     @computed_field  # type: ignore[misc]
     @property
-    def count(self) -> int:
-        return len(self.items)
-
-    @computed_field  # type: ignore[misc]
-    @property
     def max_page(self) -> Optional[int]:
         if self.pagination is None or self.total is None or self.total == 0:
             return None
 
         return self.total // self.pagination.page_size + 1
+
+    def __iter__(self):
+        return iter(self.items)
+
+    def __len__(self):
+        return len(self.items)
+
+    def __getitem__(self, index) -> T:
+        return self.items[index]
+
+    def __contains__(self, item) -> bool:
+        return item in self.items
+
+    def __reversed__(self) -> Iterator[T]:
+        return reversed(self.items)
