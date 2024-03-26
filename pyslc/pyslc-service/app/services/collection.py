@@ -90,7 +90,7 @@ class CollectionService(ServiceBase):
             uid=collection.uid, name=collection.name, description=collection.description
         )
 
-    def get_by_name(self, name: str) -> CollectionResponse:
+    def find_by_name(self, name: str) -> CollectionResponse:
         collection = self.collection_repository.get_collection_by_name(name)
         if not collection:
             raise ValueError("Collection not found")

@@ -45,10 +45,10 @@ class ModelBase(Base, ModelMixin):
 
     def __repr__(self):
         return (
-            f"<{self.__class__.__name__}(id={self.uid}, is_deleted={self.is_deleted})>"
+            f"<{self.__class__.__name__}(uid={self.uid}, is_deleted={self.is_deleted})>"
         )
 
     def __str__(self):
         return (
-            f"<{self.__class__.__name__}(id={self.uid}, is_deleted={self.is_deleted})>"
+            f"<{self.__class__.__name__}(uid={self.uid}, is_deleted={self.is_deleted})>"
         )

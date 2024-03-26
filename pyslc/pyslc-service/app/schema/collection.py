@@ -14,7 +14,7 @@ class CollectionBase(BaseModel):
 
 
 class CollectionPayload(CollectionBase):
-    id: str
+    uid: str
     knowledge_content: List[str]
 
 

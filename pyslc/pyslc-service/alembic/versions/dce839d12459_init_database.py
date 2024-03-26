@@ -2,7 +2,7 @@
 
 Revision ID: dce839d12459
 Revises:
-Create Date: 2024-03-26 00:56:04.350085
+Create Date: 2024-03-26 07:44:22.085604
 
 """
 from typing import Sequence, Union
@@ -49,7 +49,7 @@ def upgrade() -> None:
         op.f("ix_pyslc_collection_name"),
         "collection",
         ["name"],
-        unique=True,
+        unique=False,
         schema="pyslc",
     )
     op.create_table(

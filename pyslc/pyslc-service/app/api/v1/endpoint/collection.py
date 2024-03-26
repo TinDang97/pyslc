@@ -7,7 +7,6 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.schema.collection import (
     CollectionCreatePayload,
-    CollectionCreateResponse,
     CollectionResponse,
     CollectionWithKnowledgeResponse,
     UpdateCollectionPayload,
@@ -19,7 +18,7 @@ router = APIRouter()
 TEST_USER = "test-user"
 
 
-@router.post("/", response_model=CollectionCreateResponse, status_code=201)
+@router.post("/", response_model=CollectionResponse, status_code=201)
 @inject
 def create_collection(
     payload: CollectionCreatePayload,
@@ -51,11 +50,11 @@ def get_collection(
 
 @router.get("/name/{name}", response_model=CollectionResponse, status_code=200)
 @inject
-def get_collection_by_name(
+def find_collection_by_name(
     name: str,
     service: CollectionService = Depends(Provide[Container.collection_service]),
 ):
-    return service.get_by_name(name)
+    return service.find_by_name(name)
 
 
 @router.put("/{uid}", response_model=CollectionResponse, status_code=200)

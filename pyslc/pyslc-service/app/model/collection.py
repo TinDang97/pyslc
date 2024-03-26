@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 class Collection(ModelBase, TimestampMixin, UserMixin):
     __tablename__ = "collection"
 
-    name: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
+    name: Mapped[str] = mapped_column(String, nullable=False, index=True)
     description: Mapped[str] = mapped_column(String, nullable=False)
 
     documents: Mapped[List["Document"]] = relationship(back_populates="collection")

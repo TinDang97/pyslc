@@ -35,4 +35,4 @@ class KnowledgeBaseUpdatePayload(BaseModel):
 
 
 class KnowledgeBaseDeletePayload(BaseModel):
-    id: str
+    uid: str
