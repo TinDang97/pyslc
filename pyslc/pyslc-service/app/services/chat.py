@@ -2,6 +2,8 @@
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
+from ..model.knowledge import Knowledge
+from ..schema.query import ListResponse
 from app.core.types import UIDType
 from app.schema.chat import (
     AgentChatCreatePayload,
@@ -17,7 +19,7 @@ if TYPE_CHECKING:
     from app.services.collection import CollectionService
     from app.repository.chat import ChatRepository
     from app.repository.knowledge import KnowledgeRepository
-    from app.core.llm.base import LLMService
+    from app.core.llm.service import LLMService
     from app.core.chat.chat import AgentService
 
 
@@ -43,7 +45,7 @@ class ChatService:
         return uuid4()
 
     @staticmethod
-    def get_engine_id(
+    def get_engine_uid(
         collection_id: UIDType,
         user_id: UIDType,
     ):
@@ -76,42 +78,47 @@ class ChatService:
         response = chat_agent.stream(payload.message)
         return response
 
-    def refresh_engine(self, engine_id: UIDType, collection_id):
-        collection: CollectionResponse = self.collection_service.get(collection_id)
-        if not collection:
-            raise ValueError("Collection not found")
-
-        knowledges = self.knowledge_repository.get_knowledge_by_collection(
-            collection_id=collection_id
-        )
-        llm_engine = self.llm_service.get_engine(engine_id)
-        llm_engine.refresh_index(knowledges.raw())
-
-    def get_engine(self, collection_id: UIDType, user_id: UIDType):
-        engine_id = self.get_engine_id(collection_id, user_id)
-        llm_engine = self.llm_service.get_engine(engine_id)
-        if llm_engine is None:
-            raise ValueError("Engine not found")
-        return llm_engine
-
-    def create_engine(self, collection_uid: UIDType, user_id: UIDType):
+    def refresh_engine(self, engine_id: UIDType, collection_uid: UIDType):
         collection: CollectionResponse = self.collection_service.get(collection_uid)
         if not collection:
             raise ValueError("Collection not found")
 
-        knowledges = self.knowledge_repository.get_knowledge_by_collection(
-            collection_id=collection_uid
+        knowledges: ListResponse[
+            Knowledge
+        ] = self.knowledge_repository.get_knowledges_by_collection_uid(
+            collection_uid=collection_uid, query=QueryParams(page_size=100)
         )
-        return self.llm_service.__call__(
-            engine_uid=self.get_engine_id(collection_uid, user_id),
+        self.llm_service.refresh_engine(
+            engine_id, [item.content for item in knowledges.items]
+        )
+
+    def get_engine(self, collection_uid: UIDType, user_id: UIDType):
+        engine_uid = self.get_engine_uid(collection_uid, user_id)
+        llm_engine = self.llm_service.get_engine(engine_uid)
+        if llm_engine is None:
+            raise ValueError("Engine not found")
+        return llm_engine
+
+    def create_engine(
+        self, collection_uid: UIDType, user_id: UIDType, max_docs: int = 100
+    ):
+        collection: CollectionResponse = self.collection_service.get(collection_uid)
+        if not collection:
+            raise ValueError("Collection not found")
+
+        knowledges = self.knowledge_repository.get_knowledges_by_collection_uid(
+            collection_uid=collection_uid, query=QueryParams(page_size=max_docs)
+        )
+        return self.llm_service(
+            engine_uid=self.get_engine_uid(collection_uid, user_id),
             collection_uid=collection_uid,
-            docs=knowledges.raw(),
+            docs=[item.content for item in knowledges.items],
         )
 
     def create_chat_agent(
         self, payload: AgentChatCreatePayload, user_id: str
     ) -> AgentChatResponse:
-        llm_engine = self.get_engine(payload.collection_id, user_id)
+        llm_engine = self.get_engine(payload.collection_uid, user_id)
         session_id = self.create_chat_session()
         self.agent_service(session_id, llm_engine.agent())
         return AgentChatResponse(session_id=session_id)

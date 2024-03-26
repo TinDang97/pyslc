@@ -1,9 +1,18 @@
+from functools import lru_cache
 import os
 from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator, PostgresDsn
 from pydantic_core.core_schema import ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+PRODUCTION_ENV_FILE = ".env"
+DEVELOPMENT_ENV_FILE = "dev.env"
+
+ENV_FILE_MAPPING: dict[str, str] = {
+    "production": PRODUCTION_ENV_FILE,
+    "development": DEVELOPMENT_ENV_FILE,
+}
 
 
 class DatabaseSettings(BaseModel):
@@ -22,7 +31,7 @@ class DatabaseSettings(BaseModel):
         if field_value:
             return field_value
 
-        field_value_: PostgresDsn = PostgresDsn.build(
+        field_value_: PostgresDsn = getattr(PostgresDsn, "build")(
             scheme="postgresql",
             username=values.data.get("user"),
             password=values.data.get("password"),
@@ -79,7 +88,15 @@ class Settings(BaseSettings):
 
 
 # create an instance of the Settings class
-if os.environ.get("PYSLC_ENV") == "production":
-    settings = Settings(_env_file=".env")  # type: ignore
-else:
-    settings = Settings(_env_file="dev.env")  # type: ignore
+
+
+@lru_cache
+def get_settings() -> Settings:
+    env_file: str = ENV_FILE_MAPPING.get(
+        os.environ.get("PYSLC_ENV", default="development"),
+        ENV_FILE_MAPPING["development"],
+    )
+    return Settings(_env_file=env_file)  # type: ignore
+
+
+settings: Settings = get_settings()

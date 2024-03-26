@@ -1,6 +1,6 @@
 from typing import Type
 
-from sqlalchemy import desc, func, Select
+from sqlalchemy import func, Select
 from sqlalchemy.orm import Session
 
 from app.model.base import Base
@@ -13,23 +13,18 @@ def map_dict_to_entity(base: Type[Base], *_, **kwargs) -> Base:
 
 def paginate(smt: Select, query: QueryParams, session: Session) -> ListResponse:
     """Paginate the query."""
-    if query.order_by:
-        smt = (
-            smt.order_by(query.order_by)
-            if not query.desc
-            else smt.order_by(desc(query.order_by))
-        )
-
-    paginated_query = smt.offset((query.page - 1) * query.page_size).limit(
-        query.page_size
-    )
+    paginated_query = smt.offset(query.offset).limit(query.limit)
+    total = session.query(func.count()).select_from(smt.subquery()).scalar()
     return ListResponse(
-        total=session.query(func.count()).select_from(smt.subquery()).scalar(),
-        items=list(session.execute(paginated_query).scalars().all()),
-        pagination=QueryParams(
+        total=total,
+        items=list(session.execute(paginated_query).unique().scalars().all()),
+        next_page=QueryParams(
             page=query.page + 1,
             page_size=query.page_size,
             order=query.order,
             order_by=query.order_by,
-        ),
+        )
+        if query.offset + query.page_size <= total
+        else None,
+        current_page=query,
     )

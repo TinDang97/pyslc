@@ -1,10 +1,12 @@
 # Created by tindang at 04/02/2024
-from typing import Generic, Iterator, List, Optional, TypeVar, Annotated
+from enum import Enum
+from typing import Annotated, Generic, List, Optional, Type, TypeVar
 
 from pydantic import BaseModel, computed_field, Field
-from enum import Enum
+from app.core.util import model_from_attrs
 
 T = TypeVar("T")
+BaseT = TypeVar("BaseT", bound=BaseModel)
 
 
 class ListOrderOptions(str, Enum):
@@ -14,7 +16,7 @@ class ListOrderOptions(str, Enum):
 
 class QueryParams(BaseModel):
     page: Annotated[int, Field(ge=1)] = 1
-    page_size: Annotated[int, Field()] = 10
+    page_size: Annotated[int, Field(ge=1, le=100)] = 10
     order: ListOrderOptions = ListOrderOptions.desc
     order_by: str = "updated_at"
 
@@ -45,27 +47,27 @@ class QueryParams(BaseModel):
 class ListResponse(BaseModel, Generic[T]):
     items: List[T]
     total: Optional[int] = None
-    pagination: Optional[QueryParams] = None
+    next_page: Optional[QueryParams] = None
+    current_page: QueryParams
 
     @computed_field  # type: ignore[misc]
     @property
     def max_page(self) -> Optional[int]:
-        if self.pagination is None or self.total is None or self.total == 0:
-            return None
+        if self.next_page is None or self.total is None or self.total == 0:
+            return self.current_page.page
 
-        return self.total // self.pagination.page_size + 1
+        return self.total // self.next_page.page_size + 1
 
-    def __iter__(self):
-        return iter(self.items)
+    def map_model(self, model: Type[BaseT], strict=None, context=None):
+        return ListResponse[BaseT](
+            items=list(map(model_from_attrs(model, strict, context), self.items)),
+            total=self.total,
+            next_page=self.next_page,
+            current_page=self.current_page,
+        )
 
     def __len__(self):
         return len(self.items)
 
-    def __getitem__(self, index) -> T:
-        return self.items[index]
-
     def __contains__(self, item) -> bool:
         return item in self.items
-
-    def __reversed__(self) -> Iterator[T]:
-        return reversed(self.items)

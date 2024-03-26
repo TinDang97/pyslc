@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from app.core.types import UIDType
 from app.schema.knowledge import (
     KnowledgeBaseCreatePayload,
-    KnowledgeBaseListPayloadResponse,
+    CollectionKnowledgesResponse,
     KnowledgeBaseResponse,
     KnowledgeBaseUpdatePayload,
 )
+from app.schema.query import ListResponse, QueryParams
 from app.services.base import ServiceBase
 
 if TYPE_CHECKING:
@@ -40,31 +41,26 @@ class KnowledgeService(ServiceBase):
         knowledge = self.knowledge_repository.get(uid)
         return KnowledgeBaseResponse.model_validate(knowledge, from_attributes=True)
 
-    def get_knowledges(
-        self, limit: int = 10, offset: int = 0
-    ) -> List[KnowledgeBaseResponse]:
-        knowledge_parts = self.knowledge_repository.get_knowledges(
-            limit=limit, offset=offset
-        )
-        return list(
-            map(
-                lambda x: KnowledgeBaseResponse.model_validate(x, from_attributes=True),
-                knowledge_parts,
-            )
-        )
+    def get_knowledges(self, query: QueryParams) -> ListResponse[KnowledgeBaseResponse]:
+        knowledge_parts = self.knowledge_repository.get_knowledges(query)
+        return knowledge_parts.map_model(KnowledgeBaseResponse)
 
     def get_knowledge_bases_by_collection(
-        self, collection_id: UIDType, limit: int = 10, offset: int = 0
-    ) -> KnowledgeBaseListPayloadResponse:
-        knowledges = self.knowledge_repository.get_knowledge_by_collection(
-            collection_id=collection_id,
-            limit=limit,
-            offset=offset,
+        self, collection_uid: UIDType, query: QueryParams
+    ) -> CollectionKnowledgesResponse:
+        knowledges = self.knowledge_repository.get_knowledges_by_collection_uid(
+            collection_uid=collection_uid, query=query
         )
 
         # parse the knowledge parts to get the collection name and the data
-        return KnowledgeBaseListPayloadResponse.model_validate(
-            dict(collection_uid=collection_id, data=knowledges, size=len(knowledges)),
+        return CollectionKnowledgesResponse.model_validate(
+            dict(
+                collection_uid=collection_uid,
+                items=knowledges.items,
+                total=knowledges.total,
+                next_page=knowledges.next_page,
+                current_page=knowledges.current_page,
+            ),
             from_attributes=True,
         )
 
@@ -81,8 +77,8 @@ class KnowledgeService(ServiceBase):
     def get(self, uid: UIDType):
         return self.get_knowledge(uid)
 
-    def list(self, limit: int = 10, offset: int = 0):
-        return self.get_knowledges(limit, offset)
+    def list(self, query: QueryParams):
+        return self.get_knowledges(query)
 
     def create(self, payload: KnowledgeBaseCreatePayload, created_by: str):
         return self.create_knowledge_base(payload, created_by)

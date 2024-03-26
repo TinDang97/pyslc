@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from logging import Logger
 import os
-from typing import List, Union
+from typing import List, Optional, Union
 import uuid
 from warnings import warn
 
@@ -18,7 +18,7 @@ from llama_index.embeddings import OpenAIEmbedding
 from llama_index.vector_stores.zep import ZepVectorStore
 import openai
 
-from app.core.llm.base import LLMEngine, LLMService
+from app.core.llm.base import LLMEngine
 from app.core.storage.storage import Storage
 from app.core.types import UIDType
 from app.core.util import hash_string
@@ -91,7 +91,7 @@ class ZepLLMEngine(LLMEngine):
 
     @staticmethod
     def to_document(text: str) -> Document:
-        return Document(doc_id=hash_string(text), text=text)
+        return Document(doc_id=hash_string(text), text=text)  # noqa
 
     def to_documents(self, texts: List[str]) -> List[Document]:
         return [self.to_document(text) for text in texts]
@@ -108,7 +108,7 @@ class ZepLLMEngine(LLMEngine):
 
     def add_document(self, doc: str | Document):
         if isinstance(doc, str):
-            doc = Document(doc_id=hash_string(doc), text=doc)
+            doc = Document(doc_id=hash_string(doc), text=doc)  # noqa
         self.index.insert(doc)
 
     def refresh_index(self, docs: DocParam):
@@ -129,7 +129,12 @@ class ZepLLMEngine(LLMEngine):
         return _agent
 
 
-class ZepLLMService(LLMService[ZepLLMEngine]):
+class ZepLLMService:
+    """
+    ZepLLMService is a service class that manages the lifecycle of ZepLLMEngine instances.
+    supper class: LLMService (app.core.llm.service.LLMService)
+    """
+
     def __init__(
         self,
         zep_url: str,
@@ -138,11 +143,11 @@ class ZepLLMService(LLMService[ZepLLMEngine]):
         logger: Logger,
         storage: Storage[UIDType, ZepLLMEngine],
     ):
-        self.zep_url = zep_url
-        self.openai_api_key = openai_api_key
-        self.llm_storage_dir = llm_storage_dir
-        self.logger = logger
-        self.storage = storage
+        self.zep_url: str = zep_url
+        self.openai_api_key: str = openai_api_key
+        self.llm_storage_dir: str = llm_storage_dir
+        self.logger: Logger = logger
+        self.storage: Storage[uuid.UUID | str, ZepLLMEngine] = storage
 
     def get_engine(self, engine_uid: UIDType) -> ZepLLMEngine:
         engine = self.storage.get(engine_uid)
@@ -153,7 +158,10 @@ class ZepLLMService(LLMService[ZepLLMEngine]):
     def add_engine(self, engine_uid: UIDType, engine: ZepLLMEngine):
         self.storage.add(engine_uid, engine)
 
-    def init_llm_engine(self, collection_uid: UIDType, docs: DocParam) -> ZepLLMEngine:
+    def delete_engine(self, engine_uid: UIDType):
+        self.storage.delete(engine_uid)
+
+    def init_engine(self, collection_uid: UIDType, docs: DocParam) -> ZepLLMEngine:
         engine = ZepLLMEngine(
             docs=docs,
             zep_url=self.zep_url,
@@ -164,12 +172,21 @@ class ZepLLMService(LLMService[ZepLLMEngine]):
         )
         return engine
 
+    def refresh_engine(self, engine_uid: UIDType, docs: DocParam):
+        engine = self.get_engine(engine_uid=engine_uid)
+        engine.refresh_index(docs=docs)
+
     def __call__(
-        self, engine_uid: UIDType, collection_uid: UIDType, docs: DocParam
+        self,
+        engine_uid: UIDType,
+        collection_uid: UIDType,
+        docs: Optional[DocParam] = None,
     ) -> ZepLLMEngine:
         if collection_uid not in self.storage:
-            engine = self.init_llm_engine(collection_uid, docs)
-            self.add_engine(engine_uid, engine)
-        else:
-            engine = self.get_engine(collection_uid)
+            engine = self.init_engine(collection_uid=collection_uid, docs=docs or [])
+            self.add_engine(engine_uid=engine_uid, engine=engine)
+        elif docs:
+            self.refresh_engine(engine_uid=collection_uid, docs=docs)
+
+        engine = self.get_engine(engine_uid=engine_uid)
         return engine

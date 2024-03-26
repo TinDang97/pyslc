@@ -24,7 +24,7 @@ class ChatBase(BaseModel):
 
 
 class AgentChatCreatePayload(BaseModel):
-    collection_id: str = Field(..., title="Collection ID")
+    collection_uid: str = Field(..., title="Collection ID")
 
 
 class AgentChatResponse(BaseModel):

@@ -1,33 +1,30 @@
 from __future__ import annotations
 
-from typing import List
 
 from pydantic import BaseModel
 
 from app.core.types import UIDType
+from app.schema.query import ListResponse
 
 
-class _Base(BaseModel):
+class KnownledgeBase(BaseModel):
     content: str
 
 
-class KnowledgeBasePayload(_Base):
+class KnowledgeBasePayload(KnownledgeBase):
     uid: UIDType
 
 
-class KnowledgeBaseCreatePayload(_Base):
+class KnowledgeBaseCreatePayload(KnownledgeBase):
     collection_uid: UIDType
 
 
-class KnowledgeBaseResponse(_Base):
+class KnowledgeBaseResponse(KnownledgeBase):
     collection_uid: UIDType
-    content: str
 
 
-class KnowledgeBaseListPayloadResponse(BaseModel):
+class CollectionKnowledgesResponse(ListResponse[KnownledgeBase]):
     collection_uid: UIDType
-    data: List[KnowledgeBaseResponse]
-    size: int
 
 
 class KnowledgeBaseUpdatePayload(BaseModel):

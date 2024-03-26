@@ -22,4 +22,4 @@ class Knowledge(ModelBase, TimestampMixin, UserMixin):
     )
 
     def __repr__(self):
-        return f"<Knowledge(content={self.content}, metadata={self.metadata}, collection_id={self.collection_id})>"
+        return f"<Knowledge(content={self.content}, metadata={self.metadata}, collection_id={self.collection_uid})>"

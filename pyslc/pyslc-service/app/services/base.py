@@ -7,7 +7,7 @@ class ServiceBase(ABC):
         pass
 
     @abstractmethod
-    def list(self, limit, offset):
+    def list(self, query):
         pass
 
     @abstractmethod

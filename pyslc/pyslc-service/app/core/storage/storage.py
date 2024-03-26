@@ -19,6 +19,9 @@ class Storage(Generic[K, T]):
     def add(self, session_id: K, instance: T) -> None:
         self._storage[session_id] = instance
 
+    def delete(self, session_id: K) -> None:
+        self._storage.pop(session_id)
+
     def clear(self, session_id: K) -> None:
         self._storage.pop(session_id)
 

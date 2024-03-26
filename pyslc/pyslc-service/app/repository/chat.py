@@ -1,7 +1,7 @@
 from logging import Logger
 from typing import Callable, Optional
 
-from sqlalchemy import select
+from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from app.core.types import UIDType
@@ -51,6 +51,15 @@ class ChatRepository(BaseRepository[Chat]):
             smt = select(Chat).filter(
                 Chat.collection_id == collection_id, Chat.is_deleted.__eq__(False)
             )
+
+            if query.order_by:
+                order_by = Chat.__dict__[query.order_by]
+                smt = (
+                    smt.order_by(order_by)
+                    if not query.desc
+                    else smt.order_by(desc(order_by))
+                )
+
             page: ListResponse[Chat] = paginate(smt, query, session)
             return ChatListResponsePayload.model_validate(page, from_attributes=True)
 
@@ -64,5 +73,13 @@ class ChatRepository(BaseRepository[Chat]):
             smt = select(Chat).filter(
                 Chat.created_by == user_id, Chat.is_deleted.__eq__(False)
             )
+            if query.order_by:
+                order_by = Chat.__dict__[query.order_by]
+                smt = (
+                    smt.order_by(order_by)
+                    if not query.desc
+                    else smt.order_by(desc(order_by))
+                )
+
             page: ListResponse[Chat] = paginate(smt, query, session)
             return ChatListResponsePayload.model_validate(page, from_attributes=True)

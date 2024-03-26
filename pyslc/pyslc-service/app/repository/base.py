@@ -5,7 +5,6 @@ from typing import (
     Callable,
     Dict,
     Protocol,
-    Sequence,
     Type,
     TypeVar,
     MutableMapping,
@@ -16,8 +15,10 @@ from sqlalchemy.orm import Session
 
 from app.core.types import UIDType
 from app.databases.database import Base
+from app.repository.util import paginate
+from app.schema.query import QueryParams, ListResponse
 
-R = TypeVar("R", bound=Base, covariant=True)
+R = TypeVar("R", bound=Base)
 T = TypeVar("T", bound=Base)
 
 
@@ -25,9 +26,7 @@ class ReadBaseRepository(Protocol[R]):
     def get(self, uid: UIDType, **filter_criteria) -> R | None:
         ...
 
-    def find_all(
-        self, limit: int = 10, offset: int = 0, **filter_criteria
-    ) -> Sequence[R]:
+    def find_all(self, query: QueryParams, **filter_criteria) -> ListResponse[R]:
         ...
 
     def find(self, **filter_criteria) -> R | None:
@@ -96,28 +95,23 @@ class BaseRepository(ReadBaseRepository[T], WriteBaseRepository):
 
     def find_all(
         self,
-        limit: int = 10,
-        offset: int = 0,
-        order_by: str = "updated_at",
-        desc: bool = False,
+        query: QueryParams,
         **filter_criteria,
-    ) -> Sequence[T]:
+    ) -> ListResponse[T]:
         """
         Get all entities.
 
         :return: list of entities
         """
         with self.session_factory() as session:
-            smt = (
-                select(self.entity)
-                .filter_by(
-                    **filter_criteria,
-                    is_deleted=False,
-                )
-                .limit(limit)
-                .offset(offset)
+            smt = select(self.entity).filter_by(
+                **filter_criteria,
+                is_deleted=False,
             )
-            return session.execute(smt).scalars().all()
+            if query.order_by:
+                order_by = getattr(self.entity, query.order_by)
+                smt = smt.order_by(order_by.desc() if query.desc else order_by.asc())
+            return paginate(smt, query, session)
 
     def create(self, payload: Dict, created_by: str):
         """

@@ -6,6 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from app.core.types import UIDType
+from app.schema.query import ListResponse
 
 
 class CollectionBase(BaseModel):
@@ -34,7 +35,7 @@ class KnowledgeBaseResponse(BaseModel):
 
 class CollectionWithKnowledgeResponse(CollectionBase):
     uid: UIDType
-    knowledges: List[KnowledgeBaseResponse]
+    knowledges: ListResponse[KnowledgeBaseResponse]
 
 
 class CollectionCreatePayload(CollectionBase):

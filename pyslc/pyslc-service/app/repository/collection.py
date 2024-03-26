@@ -10,25 +10,20 @@ from sqlalchemy.orm import joinedload, Session
 from app.model.collection import Collection
 from app.model.knowledge import Knowledge
 from app.repository.base import BaseRepository
-from app.repository.util import map_dict_to_entity
+from app.repository.util import map_dict_to_entity, paginate
+from app.schema.query import ListResponse, QueryParams
 
 
 class CollectionRepository(BaseRepository[Collection]):
     def __init__(self, session_factory: Callable[[], Session], logger: Logger):
         super().__init__(Collection, session_factory, logger)
 
-    def get_collections(self, limit: int = 10, offset: int = 0) -> List[Collection]:
+    def get_collections(self, query: QueryParams) -> ListResponse[Collection]:
         with self.session_factory() as session:
-            smt = (
-                select(Collection)
-                .options(joinedload(Collection.knowledge_parts))
-                .limit(limit)
-                .offset(offset)
-            )
-            collections = session.execute(smt).scalars().all()
-            return list(collections)
+            smt = select(Collection).options(joinedload(Collection.knowledge_parts))
+            return paginate(smt, query, session)
 
-    def get_collection_by_id(self, uid: str | UUID) -> Collection | None:
+    def get_collection_by_uid(self, uid: str | UUID) -> Collection | None:
         return self.get(uid)
 
     def create_collection(

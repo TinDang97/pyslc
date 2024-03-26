@@ -1,5 +1,3 @@
-from typing import List
-
 from app.core.container import Container
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, status
@@ -7,10 +5,10 @@ from fastapi import APIRouter, Depends, status
 from app.schema.knowledge import (
     KnowledgeBaseCreatePayload,
     KnowledgeBaseUpdatePayload,
-    KnowledgeBaseListPayloadResponse,
+    CollectionKnowledgesResponse,
     KnowledgeBaseResponse,
 )
-from app.schema.query import QueryParams
+from app.schema.query import ListResponse, QueryParams
 from app.services.knowledge import KnowledgeService
 
 router = APIRouter()
@@ -39,19 +37,21 @@ def get_knowledge_base(
 
 
 @router.get(
-    "/", response_model=List[KnowledgeBaseResponse], status_code=status.HTTP_200_OK
+    "/",
+    response_model=ListResponse[KnowledgeBaseResponse],
+    status_code=status.HTTP_200_OK,
 )
 @inject
 def get_knowledge_bases(
     query: QueryParams = Depends(QueryParams),
     service: KnowledgeService = Depends(Provide[Container.knowledge_service]),
 ):
-    return service.get_knowledges(query.limit, query.offset)
+    return service.get_knowledges(query)
 
 
 @router.get(
     "/collection/{collection_id}",
-    response_model=KnowledgeBaseListPayloadResponse,
+    response_model=CollectionKnowledgesResponse,
     status_code=status.HTTP_200_OK,
 )
 @inject
@@ -60,9 +60,7 @@ def get_knowledge_bases_by_collection(
     query: QueryParams = Depends(QueryParams),
     service: KnowledgeService = Depends(Provide[Container.knowledge_service]),
 ):
-    return service.get_knowledge_bases_by_collection(
-        collection_id, query.limit, query.offset
-    )
+    return service.get_knowledge_bases_by_collection(collection_id, query)
 
 
 @router.put("/{uid}", status_code=status.HTTP_204_NO_CONTENT)

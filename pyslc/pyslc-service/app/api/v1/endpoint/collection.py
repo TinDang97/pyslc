@@ -1,5 +1,4 @@
 # Created by tindang at 04/02/2024
-from typing import List
 
 from app.core.container import Container
 from dependency_injector.wiring import Provide, inject
@@ -11,7 +10,7 @@ from app.schema.collection import (
     CollectionWithKnowledgeResponse,
     UpdateCollectionPayload,
 )
-from app.schema.query import QueryParams
+from app.schema.query import ListResponse, QueryParams
 from app.services.collection import CollectionService
 
 router = APIRouter()
@@ -30,13 +29,13 @@ def create_collection(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/", response_model=List[CollectionResponse], status_code=200)
+@router.get("/", response_model=ListResponse[CollectionResponse], status_code=200)
 @inject
 def list_collections(
     query: QueryParams = Depends(QueryParams),
     service: CollectionService = Depends(Provide[Container.collection_service]),
 ):
-    return service.list(query.limit, query.offset)
+    return service.list(query)
 
 
 @router.get("/{uid}", response_model=CollectionResponse, status_code=200)
@@ -77,14 +76,17 @@ def delete_collection(
 
 
 @router.get(
-    "/{collection_name}/knowledge",
+    "/{collection_uid}/knowledge",
     response_model=CollectionWithKnowledgeResponse,
     status_code=200,
     description="Get knowledge content of a collection",
 )
 @inject
 def get_knowledge(
-    collection_name: str,
+    collection_uid: str,
+    query: QueryParams = Depends(QueryParams),
     service: CollectionService = Depends(Provide[Container.collection_service]),
-):
-    return service.get_knowledge_by_collection(collection_name)
+) -> CollectionWithKnowledgeResponse:
+    return service.get_knowledge_by_collection_uid(
+        collection_uid=collection_uid, query=query
+    )
