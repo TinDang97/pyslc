@@ -1,9 +1,8 @@
 # Created by tindang at 04/02/2024
 from enum import Enum
-from typing import Annotated, Generic, List, Optional, Type, TypeVar
+from typing import Annotated, Generic, List, Optional, TypeVar
 
 from pydantic import BaseModel, computed_field, Field
-from app.core.util import model_from_attrs
 
 T = TypeVar("T")
 BaseT = TypeVar("BaseT", bound=BaseModel)
@@ -45,6 +44,9 @@ class QueryParams(BaseModel):
 
 
 class ListResponse(BaseModel, Generic[T]):
+    class Config:
+        arbitrary_types_allowed = True
+
     items: List[T]
     total: Optional[int] = None
     next_page: Optional[QueryParams] = None
@@ -57,14 +59,6 @@ class ListResponse(BaseModel, Generic[T]):
             return self.current_page.page
 
         return self.total // self.next_page.page_size + 1
-
-    def map_model(self, model: Type[BaseT], strict=None, context=None):
-        return ListResponse[BaseT](
-            items=list(map(model_from_attrs(model, strict, context), self.items)),
-            total=self.total,
-            next_page=self.next_page,
-            current_page=self.current_page,
-        )
 
     def __len__(self):
         return len(self.items)

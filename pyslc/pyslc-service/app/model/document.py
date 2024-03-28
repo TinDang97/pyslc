@@ -19,7 +19,7 @@ class Document(ModelBase, TimestampMixin, UserMixin):
     file_type: Mapped[str] = mapped_column(String, nullable=False)
     file_hash: Mapped[str] = mapped_column(String, nullable=False)
 
-    collection_id = mapped_column(ForeignKey("collection.uid"), nullable=False)
+    collection_uid = mapped_column(ForeignKey("collection.uid"), nullable=False)
     collection: Mapped["Collection"] = relationship(
         back_populates="documents", uselist=False
     )

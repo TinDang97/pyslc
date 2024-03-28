@@ -1,26 +1,25 @@
 # Created by tindang at 04/02/2024
-from typing import TYPE_CHECKING
-from uuid import UUID, uuid4
+from typing import TYPE_CHECKING, Any, Generator
 
-from ..model.knowledge import Knowledge
-from ..schema.query import ListResponse
-from app.core.types import UIDType
+from ..model.message import Message
+from app.core.types import UIDType, ChatMessage
 from app.schema.chat import (
-    AgentChatCreatePayload,
-    AgentChatResponse,
     ChatCreatePayload,
-    ChatResponsePayload,
+    ChatCreateResponse,
     ChatListResponsePayload,
 )
 from app.schema.collection import CollectionResponse
+from app.schema.message import MessageResponsePayload, MessageSendPayload
 from app.schema.query import QueryParams
+from app.core.types.message import MessageRole
 
 if TYPE_CHECKING:
     from app.services.collection import CollectionService
     from app.repository.chat import ChatRepository
     from app.repository.knowledge import KnowledgeRepository
-    from app.core.llm.service import LLMService
-    from app.core.chat.chat import AgentService
+    from app.repository.message import MessageRepository
+    from app.core.interfaces.llm import AgentService
+    from app.core.interfaces.llm.agent import Agent
 
 
 class ChatService:
@@ -30,98 +29,144 @@ class ChatService:
         collection_service: "CollectionService",
         chat_repository: "ChatRepository",
         knowledge_repository: "KnowledgeRepository",
+        message_repository: "MessageRepository",
         # core
-        llm_service: "LLMService",
-        agent_service: "AgentService",
+        agent_service: "AgentService[Agent]",
     ):
         self.collection_service = collection_service
         self.knowledge_repository = knowledge_repository
         self.chat_repository = chat_repository
-        self.llm_service = llm_service
         self.agent_service = agent_service
-
-    @staticmethod
-    def create_chat_session():
-        return uuid4()
-
-    @staticmethod
-    def get_engine_uid(
-        collection_id: UIDType,
-        user_id: UIDType,
-    ):
-        engine_id = f"{collection_id}_{user_id}"
-        return engine_id
+        self.message_repository = message_repository
 
     def get_chats_by_user(self, user_id: UIDType, query: QueryParams):
-        chats = self.chat_repository.get_by_user_id(
-            user_id,
-            query,
-        )
+        chats = self.chat_repository.get_by_user_id(user_id, query)
         return ChatListResponsePayload.model_validate(chats, from_attributes=True)
 
-    def chat(self, payload: ChatCreatePayload) -> ChatResponsePayload:
-        chat_agent = self.agent_service.get_agent(payload.session_id)
-        if chat_agent is None:
-            raise ValueError("Chat agent not found")
-
-        response = chat_agent.chat(payload.message)
-        return ChatResponsePayload(
-            message=response.response,
-            session_id=payload.session_id,
+    def _create_chat_user_message(
+        self, payload: MessageSendPayload, user_id: str
+    ) -> Message:
+        last_message = self.message_repository.get_last_message_by_chat_id(
+            payload.chat_uid
         )
 
-    def stream_chat(self, payload: ChatCreatePayload):
-        chat_agent = self.agent_service.get_agent(payload.session_id)
-        if chat_agent is None:
-            raise ValueError("Chat agent not found")
+        user_message: Message = self.message_repository.create_message(
+            chat_uid=payload.chat_uid,
+            content=payload.content,
+            role=MessageRole.USER,
+            created_by=user_id,
+            previous_message_id=last_message.uid if last_message else None,
+        )
+        return user_message
 
-        response = chat_agent.stream(payload.message)
-        return response
+    def chat(self, payload: MessageSendPayload, user_id: str) -> MessageResponsePayload:
+        chat_agent = self.agent_service.get_agent(payload.chat_uid)
+        if chat_agent is None:
+            chat = self.chat_repository.get_chat_by_uid(payload.chat_uid)
+            if not chat:
+                raise ValueError("Chat not found")
+
+            chat_agent = self.create_chat_agent(chat.uid, chat.collection_uid)
+
+        # Chat with the agent
+        response = chat_agent.chat(payload.content)
+
+        # Create user message
+        user_message: Message = self._create_chat_user_message(payload, user_id)
+
+        # Create agent message
+        response_msg = ""
+        for msg in response:
+            self.message_repository.create_message(
+                chat_uid=payload.chat_uid,
+                content=msg.content,
+                role=msg.role,
+                created_by=user_id,
+                previous_message_id=user_message.uid,
+            )
+            if msg.role == MessageRole.ASSISTANT:
+                response_msg = msg.content
+
+        return MessageResponsePayload(
+            chat_uid=payload.chat_uid,
+            content=payload.content,
+            reply_content=response_msg,
+        )
+
+    def stream_chat(self, payload: MessageSendPayload, user_id: str):
+        chat_agent = self.agent_service.get_agent(payload.chat_uid)
+        if chat_agent is None:
+            chat = self.chat_repository.get_chat_by_uid(payload.chat_uid)
+            if not chat:
+                raise ValueError("Chat not found")
+            chat_agent = self.create_chat_agent(chat.uid, chat.collection_uid)
+
+        # Chat with the agent
+        user_message: Message = self._create_chat_user_message(payload, user_id)
+
+        # Stream chat with the agent
+        response = chat_agent.stream(payload.content)
+
+        def response_wrapper() -> Generator[str, Any, None]:
+            assistance_response: str = ""
+            for chunk in response:
+                yield chunk.content
+
+                if chunk.role == MessageRole.ASSISTANT:
+                    assistance_response += chunk.content
+                else:
+                    self.message_repository.create_message(
+                        chat_uid=payload.chat_uid,
+                        content=chunk.content,
+                        role=chunk.role,
+                        created_by=user_id,
+                        previous_message_id=user_message.uid,
+                    )
+
+            self.message_repository.create_message(
+                chat_uid=payload.chat_uid,
+                content=assistance_response,
+                role=MessageRole.ASSISTANT,
+                created_by=user_id,
+                previous_message_id=user_message.uid,
+            )
+
+        return response_wrapper()
 
     def refresh_engine(self, engine_id: UIDType, collection_uid: UIDType):
-        collection: CollectionResponse = self.collection_service.get(collection_uid)
-        if not collection:
-            raise ValueError("Collection not found")
+        # TODO: Implement this method that refreshes the engine and chat agent
+        ...
 
-        knowledges: ListResponse[
-            Knowledge
-        ] = self.knowledge_repository.get_knowledges_by_collection_uid(
+    def create_chat_agent(self, chat_uid: UIDType, collection_uid: UIDType):
+        docs = self.knowledge_repository.get_knowledges_by_collection_uid(
             collection_uid=collection_uid, query=QueryParams(page_size=100)
         )
-        self.llm_service.refresh_engine(
-            engine_id, [item.content for item in knowledges.items]
+        messages = self.message_repository.get_messages_by_chat_id(
+            chat_uid=chat_uid, query=QueryParams(page_size=100)
         )
+        agent = self.agent_service(
+            session_id=chat_uid,
+            collection_uid=collection_uid,
+            docs=[item.content for item in docs.items],
+            chat_history=[
+                ChatMessage.model_validate(item, from_attributes=True)
+                for item in messages.items
+            ],
+        )
+        return agent
 
-    def get_engine(self, collection_uid: UIDType, user_id: UIDType):
-        engine_uid = self.get_engine_uid(collection_uid, user_id)
-        llm_engine = self.llm_service.get_engine(engine_uid)
-        if llm_engine is None:
-            raise ValueError("Engine not found")
-        return llm_engine
-
-    def create_engine(
-        self, collection_uid: UIDType, user_id: UIDType, max_docs: int = 100
-    ):
-        collection: CollectionResponse = self.collection_service.get(collection_uid)
+    def create_chat(self, payload: ChatCreatePayload, user_id: str):
+        collection: CollectionResponse = self.collection_service.get(
+            payload.collection_uid
+        )
         if not collection:
             raise ValueError("Collection not found")
 
-        knowledges = self.knowledge_repository.get_knowledges_by_collection_uid(
-            collection_uid=collection_uid, query=QueryParams(page_size=max_docs)
+        chat = self.chat_repository.create_chat(
+            title=payload.title,
+            description=payload.description,
+            collection_uid=payload.collection_uid,
+            created_by=user_id,
         )
-        return self.llm_service(
-            engine_uid=self.get_engine_uid(collection_uid, user_id),
-            collection_uid=collection_uid,
-            docs=[item.content for item in knowledges.items],
-        )
-
-    def create_chat_agent(
-        self, payload: AgentChatCreatePayload, user_id: str
-    ) -> AgentChatResponse:
-        llm_engine = self.get_engine(payload.collection_uid, user_id)
-        session_id = self.create_chat_session()
-        self.agent_service(session_id, llm_engine.agent())
-        return AgentChatResponse(session_id=session_id)
-
-    def get_chat_agent(self, session_id: UUID):
-        return self.agent_service.get_agent(session_id)
+        self.create_chat_agent(chat.uid, payload.collection_uid)
+        return ChatCreateResponse.model_validate(chat, from_attributes=True)

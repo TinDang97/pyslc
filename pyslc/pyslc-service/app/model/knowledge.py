@@ -18,8 +18,8 @@ class Knowledge(ModelBase, TimestampMixin, UserMixin):
         ForeignKey("collection.uid"), nullable=False
     )
     collection: Mapped["Collection"] = relationship(
-        "Collection", back_populates="knowledge_parts"
+        "Collection", back_populates="knowledges"
     )
 
     def __repr__(self):
-        return f"<Knowledge(content={self.content}, metadata={self.metadata}, collection_id={self.collection_uid})>"
+        return f"<Knowledge(content={self.content}, metadata={self.metadata}, collection_uid={self.collection_uid})>"

@@ -50,17 +50,17 @@ def get_knowledge_bases(
 
 
 @router.get(
-    "/collection/{collection_id}",
+    "/collection/{collection_uid}",
     response_model=CollectionKnowledgesResponse,
     status_code=status.HTTP_200_OK,
 )
 @inject
 def get_knowledge_bases_by_collection(
-    collection_id: str,
+    collection_uid: str,
     query: QueryParams = Depends(QueryParams),
     service: KnowledgeService = Depends(Provide[Container.knowledge_service]),
 ):
-    return service.get_knowledge_bases_by_collection(collection_id, query)
+    return service.get_knowledge_bases_by_collection(collection_uid, query)
 
 
 @router.put("/{uid}", status_code=status.HTTP_204_NO_CONTENT)

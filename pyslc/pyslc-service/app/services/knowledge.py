@@ -4,12 +4,13 @@ from typing import TYPE_CHECKING
 
 from app.core.types import UIDType
 from app.schema.knowledge import (
-    KnowledgeBaseCreatePayload,
     CollectionKnowledgesResponse,
+    KnowledgeBaseCreatePayload,
+    KnowledgeBaseListResponse,
     KnowledgeBaseResponse,
     KnowledgeBaseUpdatePayload,
 )
-from app.schema.query import ListResponse, QueryParams
+from app.schema.query import QueryParams
 from app.services.base import ServiceBase
 
 if TYPE_CHECKING:
@@ -41,9 +42,11 @@ class KnowledgeService(ServiceBase):
         knowledge = self.knowledge_repository.get(uid)
         return KnowledgeBaseResponse.model_validate(knowledge, from_attributes=True)
 
-    def get_knowledges(self, query: QueryParams) -> ListResponse[KnowledgeBaseResponse]:
+    def get_knowledges(self, query: QueryParams) -> KnowledgeBaseListResponse:
         knowledge_parts = self.knowledge_repository.get_knowledges(query)
-        return knowledge_parts.map_model(KnowledgeBaseResponse)
+        return KnowledgeBaseListResponse.model_validate(
+            knowledge_parts, from_attributes=True
+        )
 
     def get_knowledge_bases_by_collection(
         self, collection_uid: UIDType, query: QueryParams

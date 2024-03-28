@@ -1,8 +1,6 @@
-from logging import Logger
-from typing import Callable, Dict
+from typing import Dict
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 from app.model import Knowledge
 from app.repository.util import paginate
@@ -12,8 +10,7 @@ from app.core.types import UIDType
 
 
 class KnowledgeRepository(BaseRepository[Knowledge]):
-    def __init__(self, session_factory: Callable[[], Session], logger: Logger):
-        super().__init__(Knowledge, session_factory, logger)
+    _entity = Knowledge
 
     def get_knowledges(self, query: QueryParams) -> ListResponse[Knowledge]:
         knowledge_parts = self.find_all(query)

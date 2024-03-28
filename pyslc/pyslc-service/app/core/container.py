@@ -4,14 +4,16 @@ import logging
 
 from dependency_injector import containers, providers
 
-from app.core.chat.chat import Agent, AgentService
-from app.core.llm.zep import ZepLLMEngine, ZepLLMService
+from app.core.agents.llama import LlamaAgentService
+from app.core.interfaces.llm import Agent
+from app.core.llms.zep import ZepLLMEngine, ZepLLMService
 from app.core.storage import Storage
 from app.databases.database import Database
 from app.repository import (
     ChatRepository,
     CollectionRepository,
     KnowledgeRepository,
+    MessageRepository,
 )
 from app.services import (
     ChatService,
@@ -43,6 +45,11 @@ class Container(containers.DeclarativeContainer):
         session_factory=database.provided.session,
         logger=logger,
     )
+    message_repository = providers.Factory(
+        MessageRepository,
+        session_factory=database.provided.session,
+        logger=logger,
+    )
     collection_repository = providers.Factory(
         CollectionRepository,
         session_factory=database.provided.session,
@@ -68,8 +75,9 @@ class Container(containers.DeclarativeContainer):
 
     agent_storage = providers.Singleton(Storage[str, Agent])
     agent_service = providers.Factory(
-        AgentService,
-        agent_storage=agent_storage,
+        LlamaAgentService,
+        storage=agent_storage,
+        llm_service=llm_service,
     )
 
     # services
@@ -83,7 +91,7 @@ class Container(containers.DeclarativeContainer):
         collection_service=collection_service,
         chat_repository=chat_repository,
         knowledge_repository=knowledge_repository,
-        llm_service=llm_service,
+        message_repository=message_repository,
         agent_service=agent_service,
     )
     knowledge_service = providers.Factory(

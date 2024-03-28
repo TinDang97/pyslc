@@ -1,49 +1,34 @@
 from typing import List
-from uuid import UUID
 
+from pydantic import BaseModel, Field
+
+from app.schema.types import UIDType
 from app.schema.query import ListResponse
-from pydantic import BaseModel, field_validator, Field
-
-from app.core.util import split_string
 
 
 class ChatBase(BaseModel):
-    message: str = Field(..., title="Message")
-    session_id: UUID = Field(..., title="Collection ID")
-
-    @field_validator("message")  # noqa
-    @classmethod
-    def message_must_not_be_empty(cls, v: str):
-        if not v:
-            raise ValueError("Message cannot be empty")
-
-        if len(split_string(v)) > 1000:
-            raise ValueError("Message cannot be longer than 1000 tokens")
-
-        return v
+    title: str = Field(..., title="Title")
+    description: str = Field(..., title="Description")
 
 
-class AgentChatCreatePayload(BaseModel):
+class ChatCreatePayload(BaseModel):
     collection_uid: str = Field(..., title="Collection ID")
+    title: str = Field(..., title="Title")
+    description: str = Field(..., title="Description")
 
 
-class AgentChatResponse(BaseModel):
-    session_id: UUID
+class ChatCreateResponse(ChatBase):
+    uid: UIDType = Field(..., title="Chat ID")
+    collection_uid: UIDType = Field(..., title="Collection ID")
+    created_by: str = Field(..., title="Created by")
 
 
-class ChatCreatePayload(ChatBase):
+class ChatPayload(ChatBase):
     pass
 
 
-class ChatResponsePayload(BaseModel):
-    message: str
-    session_id: UUID
-
-
-class ChatInfoResponsePayload(BaseModel):
-    chat_uid: UUID
-    description: str
-    title: str
+class ChatInfoResponsePayload(ChatBase):
+    uid: UIDType = Field(..., title="Chat ID")
 
 
 class ChatListResponsePayload(ListResponse[ChatInfoResponsePayload]):

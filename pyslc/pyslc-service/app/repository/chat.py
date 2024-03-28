@@ -1,8 +1,6 @@
-from logging import Logger
-from typing import Callable, Optional
+from typing import Optional
 
 from sqlalchemy import desc, select
-from sqlalchemy.orm import Session
 
 from app.core.types import UIDType
 from app.model.chat import Chat
@@ -17,39 +15,45 @@ class ChatRepository(BaseRepository[Chat]):
     Chat repository class.
     """
 
-    def __init__(self, session_factory: Callable[[], Session], logger: Logger):
-        """
-        Constructor.
-        """
-        super().__init__(Chat, session_factory, logger)
+    _entity = Chat
 
-    def get_by_session_id(self, session_id: UIDType) -> Optional[Chat]:
+    def create_chat(
+        self, title: str, description: str, collection_uid: UIDType, created_by: str
+    ):
+        """
+        Create a chat.
+        """
+        return self.create(
+            {
+                "title": title,
+                "description": description,
+                "collection_uid": collection_uid,
+            },
+            created_by,
+        )
+
+    def get_chat_by_uid(self, chat_uid: UIDType) -> Optional[Chat]:
         """
         Get a single chat by its session ID.
 
-        :param session_id: session ID
+        :param chat_uid: chat ID
         :return: chat
         """
-        with self.session_factory() as session:
-            chat = select(Chat).filter(
-                Chat.session_id == session_id, Chat.is_deleted.__eq__(False)
-            )
-            Chat.is_deleted.__eq__(False)
-        return session.execute(chat).scalar_one_or_none()
+        return self.get(chat_uid)
 
-    def get_by_collection_id(
-        self, collection_id: UIDType, query: QueryParams
+    def get_by_collection_uid(
+        self, collection_uid: UIDType, query: QueryParams
     ) -> ChatListResponsePayload:
         """
         Get a single chat by its collection ID.
 
-        :param collection_id: collection ID
+        :param collection_uid: collection ID
         :param query: query parameters
         :return: chats
         """
         with self.session_factory() as session:
             smt = select(Chat).filter(
-                Chat.collection_id == collection_id, Chat.is_deleted.__eq__(False)
+                Chat.collection_uid == collection_uid, Chat.is_deleted.__eq__(False)
             )
 
             if query.order_by:
@@ -65,7 +69,7 @@ class ChatRepository(BaseRepository[Chat]):
 
     def get_by_user_id(
         self, user_id: UIDType, query: QueryParams
-    ) -> ChatListResponsePayload:
+    ) -> ListResponse[Chat]:
         """
         Get all chats by user ID.
         """
@@ -80,6 +84,4 @@ class ChatRepository(BaseRepository[Chat]):
                     if not query.desc
                     else smt.order_by(desc(order_by))
                 )
-
-            page: ListResponse[Chat] = paginate(smt, query, session)
-            return ChatListResponsePayload.model_validate(page, from_attributes=True)
+            return paginate(smt, query, session)

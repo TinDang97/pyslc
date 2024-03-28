@@ -4,6 +4,7 @@ from logging import Logger
 from typing import (
     Callable,
     Dict,
+    Optional,
     Protocol,
     Type,
     TypeVar,
@@ -61,10 +62,20 @@ class BaseRepository(ReadBaseRepository[T], WriteBaseRepository):
     Base repository class.
     """
 
+    _entity: Type[T]
+
     def __init__(
-        self, entity: Type[T], session_factory: Callable[[], Session], logger: Logger
+        self,
+        *,
+        entity: Optional[Type[T]] = None,
+        session_factory: Callable[[], Session],
+        logger: Logger,
     ):
-        self.entity = entity
+        entity = entity or self._entity
+        if entity is None:
+            raise ValueError("entity is required")
+
+        self.entity: Type[T] = entity
         self.session_factory = session_factory
         self.logger = logger
 

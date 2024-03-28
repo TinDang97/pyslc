@@ -82,7 +82,7 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-3.5-turbo-1106"
     zep_url: str = "http://localhost:8000"
 
-    # settings of the pyslc llm storage
+    # settings of the pyslc llms storage
     llm_storage_dir: str = "./llm_storage"
     trusted_hosts: list[str] = ["localhost"]
 

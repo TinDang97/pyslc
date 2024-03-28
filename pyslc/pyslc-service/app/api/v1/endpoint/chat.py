@@ -1,18 +1,16 @@
+from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import StreamingResponse
 
 from app.core.container import Container
-from app.schema.query import QueryParams
-from dependency_injector.wiring import Provide, inject
-
 from app.schema.chat import (
-    AgentChatCreatePayload,
-    AgentChatResponse,
     ChatCreatePayload,
+    ChatCreateResponse,
     ChatListResponsePayload,
-    ChatResponsePayload,
 )
+from app.schema.message import MessageResponsePayload, MessageSendPayload
+from app.schema.query import QueryParams
 from app.services.chat import ChatService
 
 router = APIRouter(tags=["chat"])
@@ -28,39 +26,43 @@ def get_chats(
     return service.get_chats_by_user(TEST, query)
 
 
-@router.post(
-    "/agent", response_model=AgentChatResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 @inject
 def create_agent_chat(
-    payload: AgentChatCreatePayload,
+    payload: ChatCreatePayload,
     service: ChatService = Depends(Provide[Container.chat_service]),
-) -> AgentChatResponse:
+) -> ChatCreateResponse:
     try:
-        return service.create_chat_agent(payload, TEST)
+        return service.create_chat(payload, TEST)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post(
-    "/", response_model=ChatResponsePayload, status_code=status.HTTP_201_CREATED
+    "/chat",
+    status_code=status.HTTP_201_CREATED,
+    description="Send a message to a chat agent",
 )
 @inject
-def create_chat(
-    payload: ChatCreatePayload,
+def chat(
+    payload: MessageSendPayload,
     service: ChatService = Depends(Provide[Container.chat_service]),
-) -> ChatResponsePayload:
+) -> MessageResponsePayload:
     try:
-        return service.chat(payload)
+        return service.chat(payload, TEST)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/stream/", status_code=status.HTTP_200_OK)
+@router.post(
+    "/stream/",
+    status_code=status.HTTP_200_OK,
+    description="Stream a message to a chat agent",
+)
 @inject
 def stream_chat(
-    payload: ChatCreatePayload,
+    payload: MessageSendPayload,
     service: ChatService = Depends(Provide[Container.chat_service]),
 ):
-    response = service.stream_chat(payload)
+    response = service.stream_chat(payload, TEST)
     return StreamingResponse(response, media_type="text/plain")

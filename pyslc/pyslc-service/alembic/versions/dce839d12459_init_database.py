@@ -2,7 +2,7 @@
 
 Revision ID: dce839d12459
 Revises:
-Create Date: 2024-03-26 07:44:22.085604
+Create Date: 2024-03-28 17:52:53.461916
 
 """
 from typing import Sequence, Union
@@ -56,8 +56,7 @@ def upgrade() -> None:
         "chat",
         sa.Column("title", sa.String(), nullable=False),
         sa.Column("description", sa.String(), nullable=True),
-        sa.Column("collection_id", sa.UUID(), nullable=False),
-        sa.Column("session_id", sa.String(), nullable=False),
+        sa.Column("collection_uid", sa.UUID(), nullable=False),
         sa.Column("uid", sa.UUID(), nullable=False),
         sa.Column("is_deleted", sa.Boolean(), nullable=False),
         sa.Column(
@@ -77,9 +76,9 @@ def upgrade() -> None:
         sa.Column("updated_by", sa.String(), nullable=True),
         sa.Column("deleted_by", sa.String(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["collection_id"],
+            ["collection_uid"],
             ["pyslc.collection.uid"],
-            name=op.f("fk_chat_collection_id_collection"),
+            name=op.f("fk_chat_collection_uid_collection"),
         ),
         sa.PrimaryKeyConstraint("uid", name=op.f("pk_chat")),
         schema="pyslc",
@@ -93,7 +92,7 @@ def upgrade() -> None:
         sa.Column("file_size", sa.Integer(), nullable=False),
         sa.Column("file_type", sa.String(), nullable=False),
         sa.Column("file_hash", sa.String(), nullable=False),
-        sa.Column("collection_id", sa.UUID(), nullable=False),
+        sa.Column("collection_uid", sa.UUID(), nullable=False),
         sa.Column("uid", sa.UUID(), nullable=False),
         sa.Column("is_deleted", sa.Boolean(), nullable=False),
         sa.Column(
@@ -113,9 +112,9 @@ def upgrade() -> None:
         sa.Column("updated_by", sa.String(), nullable=True),
         sa.Column("deleted_by", sa.String(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["collection_id"],
+            ["collection_uid"],
             ["pyslc.collection.uid"],
-            name=op.f("fk_document_collection_id_collection"),
+            name=op.f("fk_document_collection_uid_collection"),
         ),
         sa.PrimaryKeyConstraint("uid", name=op.f("pk_document")),
         schema="pyslc",
@@ -153,9 +152,10 @@ def upgrade() -> None:
     op.create_table(
         "message",
         sa.Column("content", sa.String(), nullable=False),
+        sa.Column("role", sa.String(), nullable=False),
         sa.Column("previous_message_id", sa.UUID(), nullable=True),
         sa.Column("next_message_id", sa.UUID(), nullable=True),
-        sa.Column("chat_id", sa.UUID(), nullable=False),
+        sa.Column("chat_uid", sa.UUID(), nullable=False),
         sa.Column("uid", sa.UUID(), nullable=False),
         sa.Column("is_deleted", sa.Boolean(), nullable=False),
         sa.Column(
@@ -175,7 +175,7 @@ def upgrade() -> None:
         sa.Column("updated_by", sa.String(), nullable=True),
         sa.Column("deleted_by", sa.String(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["chat_id"], ["pyslc.chat.uid"], name=op.f("fk_message_chat_id_chat")
+            ["chat_uid"], ["pyslc.chat.uid"], name=op.f("fk_message_chat_uid_chat")
         ),
         sa.ForeignKeyConstraint(
             ["next_message_id"],

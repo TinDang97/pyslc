@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from typing import List
 
 from pydantic import BaseModel
 
-from app.core.types import UIDType
+from app.schema.types import UIDType
 from app.schema.query import ListResponse
 
 
@@ -29,6 +30,10 @@ class CollectionKnowledgesResponse(ListResponse[KnownledgeBase]):
 
 class KnowledgeBaseUpdatePayload(BaseModel):
     content: str
+
+
+class KnowledgeBaseListResponse(ListResponse[KnownledgeBase]):
+    items: List[KnownledgeBase]
 
 
 class KnowledgeBaseDeletePayload(BaseModel):
