@@ -38,7 +38,7 @@ class CollectionRepository(BaseRepository[Collection]):
                     Collection.is_deleted.__eq__(False),
                 )
             )
-            collection = session.execute(smt).scalar_one_or_none()
+            collection = session.execute(smt).unique().scalar_one_or_none()
             return collection
 
     def create_collection(

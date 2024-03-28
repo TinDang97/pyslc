@@ -7,7 +7,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.schema.collection import (
     CollectionCreatePayload,
     CollectionResponse,
-    CollectionWithKnowledgeResponse,
     UpdateCollectionPayload,
 )
 from app.schema.query import ListResponse, QueryParams
@@ -73,20 +72,3 @@ def delete_collection(
     service: CollectionService = Depends(Provide[Container.collection_service]),
 ):
     return service.delete(uid, TEST_USER)
-
-
-@router.get(
-    "/{collection_uid}/knowledge",
-    response_model=CollectionWithKnowledgeResponse,
-    status_code=200,
-    description="Get knowledge content of a collection",
-)
-@inject
-def get_knowledge(
-    collection_uid: str,
-    query: QueryParams = Depends(QueryParams),
-    service: CollectionService = Depends(Provide[Container.collection_service]),
-) -> CollectionWithKnowledgeResponse:
-    return service.get_knowledge_by_collection_uid(
-        collection_uid=collection_uid, query=query
-    )

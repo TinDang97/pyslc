@@ -7,7 +7,6 @@ from app.schema.collection import (
     CollectionCreatePayload,
     CollectionListResponse,
     CollectionResponse,
-    CollectionWithKnowledgeResponse,
     UpdateCollectionPayload,
 )
 from app.schema.knowledge import (
@@ -89,17 +88,3 @@ class CollectionService(ServiceBase):
             raise ValueError("Collection not found")
 
         return CollectionResponse.model_validate(collection, from_attributes=True)
-
-    def get_knowledge_by_collection_uid(
-        self, collection_uid: str, query: QueryParams
-    ) -> CollectionWithKnowledgeResponse:
-        collection = self.collection_repository.get_collection_by_uid_with_knowledges(
-            collection_uid
-        )
-        if not collection:
-            raise ValueError("Collection not found")
-
-        return CollectionWithKnowledgeResponse.model_validate(
-            collection,
-            from_attributes=True,
-        )

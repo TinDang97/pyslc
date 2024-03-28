@@ -193,7 +193,9 @@ class LlamaLLMService(ABC, Generic[T]):
         docs: Optional[DocParam] = None,
     ) -> T:
         if collection_uid not in self.storage:
-            new_engine = self.init_engine(collection_uid=collection_uid, docs=docs or [])
+            new_engine = self.init_engine(
+                collection_uid=collection_uid, docs=docs or []
+            )
             self.add_engine(engine_uid=engine_uid, engine=new_engine)
         elif docs:
             self.refresh_engine(engine_uid=engine_uid, docs=docs)

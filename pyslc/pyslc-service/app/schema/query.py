@@ -19,17 +19,14 @@ class QueryParams(BaseModel):
     order: ListOrderOptions = ListOrderOptions.desc
     order_by: str = "updated_at"
 
-    @computed_field  # type: ignore[misc]
     @property
     def limit(self) -> int:
         return self.page_size
 
-    @computed_field  # type: ignore[misc]
     @property
     def offset(self) -> int:
         return (self.page - 1) * self.page_size
 
-    @computed_field  # type: ignore[misc]
     @property
     def desc(self) -> bool:
         return self.order == ListOrderOptions.desc
@@ -49,8 +46,8 @@ class ListResponse(BaseModel, Generic[T]):
 
     items: List[T]
     total: Optional[int] = None
-    next_page: Optional[QueryParams] = None
     current_page: QueryParams
+    next_page: Optional[QueryParams] = None
 
     @computed_field  # type: ignore[misc]
     @property

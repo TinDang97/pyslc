@@ -22,18 +22,19 @@ class KnowledgeBaseCreatePayload(KnownledgeBase):
 
 class KnowledgeBaseResponse(KnownledgeBase):
     collection_uid: UIDType
+    uid: UIDType
 
 
-class CollectionKnowledgesResponse(ListResponse[KnownledgeBase]):
-    collection_uid: UIDType
+class CollectionKnowledgesResponse(ListResponse[KnowledgeBasePayload]):
+    items: List[KnowledgeBasePayload]
 
 
 class KnowledgeBaseUpdatePayload(BaseModel):
     content: str
 
 
-class KnowledgeBaseListResponse(ListResponse[KnownledgeBase]):
-    items: List[KnownledgeBase]
+class KnowledgeBaseListResponse(ListResponse[KnowledgeBaseResponse]):
+    items: List[KnowledgeBaseResponse]
 
 
 class KnowledgeBaseDeletePayload(BaseModel):

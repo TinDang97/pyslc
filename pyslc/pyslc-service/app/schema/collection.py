@@ -37,9 +37,9 @@ class KnowledgeBaseResponse(BaseModel):
     content: str
 
 
-class CollectionWithKnowledgeResponse(CollectionBase, from_attributes=True):
+class CollectionWithKnowledgeResponse(CollectionBase):
     uid: UIDType
-    knowledges: ListResponse[KnowledgeBaseResponse]
+    knowledges: List[KnowledgeBaseResponse]
 
 
 class CollectionCreatePayload(CollectionBase):

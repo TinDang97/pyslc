@@ -1,14 +1,15 @@
-from app.core.container import Container
-from dependency_injector.wiring import Provide, inject
+from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends, status
 
+from app.core.container import Container
 from app.schema.knowledge import (
-    KnowledgeBaseCreatePayload,
-    KnowledgeBaseUpdatePayload,
     CollectionKnowledgesResponse,
+    KnowledgeBaseCreatePayload,
+    KnowledgeBaseListResponse,
     KnowledgeBaseResponse,
+    KnowledgeBaseUpdatePayload,
 )
-from app.schema.query import ListResponse, QueryParams
+from app.schema.query import QueryParams
 from app.services.knowledge import KnowledgeService
 
 router = APIRouter()
@@ -22,7 +23,7 @@ TEST_USER = "test-user"
 def create_knowledge_base(
     payload: KnowledgeBaseCreatePayload,
     service: KnowledgeService = Depends(Provide[Container.knowledge_service]),
-):
+) -> KnowledgeBaseResponse:
     return service.create_knowledge_base(payload, TEST_USER)
 
 
@@ -38,7 +39,7 @@ def get_knowledge_base(
 
 @router.get(
     "/",
-    response_model=ListResponse[KnowledgeBaseResponse],
+    response_model=KnowledgeBaseListResponse,
     status_code=status.HTTP_200_OK,
 )
 @inject

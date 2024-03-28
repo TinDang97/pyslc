@@ -57,13 +57,7 @@ class KnowledgeService(ServiceBase):
 
         # parse the knowledge parts to get the collection name and the data
         return CollectionKnowledgesResponse.model_validate(
-            dict(
-                collection_uid=collection_uid,
-                items=knowledges.items,
-                total=knowledges.total,
-                next_page=knowledges.next_page,
-                current_page=knowledges.current_page,
-            ),
+            knowledges,
             from_attributes=True,
         )
 
